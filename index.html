@@ -137,11 +137,45 @@
         flex-direction: column;
       }
 
-      /* PC: カード幅を固定して中央カード＋左右見切れが安定して見える */
+      /* PC: 見開きレイアウト */
       @media (min-width: 768px) {
+        /* Swiper が slidesPerView:2 で幅を自動計算するため max-width のみ解除 */
         .swiper-slide {
-          width: 280px;
           max-width: none;
+        }
+
+        /* 見開きの綴じ目（スパイン） */
+        #cardGrid {
+          position: relative;
+        }
+        #cardGrid::before {
+          content: "";
+          position: absolute;
+          left: 50%;
+          top: 6%;
+          bottom: 6%;
+          width: 1px;
+          background: linear-gradient(
+            to bottom,
+            transparent,
+            rgba(0, 0, 0, 0.13) 18%,
+            rgba(0, 0, 0, 0.13) 82%,
+            transparent
+          );
+          z-index: 1;
+          pointer-events: none;
+        }
+
+        /* 左ページ（奇数スライド）: 影を右（綴じ目）側へ */
+        .swiper-slide:nth-child(odd) .card {
+          border-radius: var(--radius) 2px 2px var(--radius);
+          box-shadow: 3px 0 10px rgba(0, 0, 0, 0.07);
+        }
+
+        /* 右ページ（偶数スライド）: 影を左（綴じ目）側へ */
+        .swiper-slide:nth-child(even) .card {
+          border-radius: 2px var(--radius) var(--radius) 2px;
+          box-shadow: -3px 0 10px rgba(0, 0, 0, 0.07);
         }
       }
 
@@ -643,6 +677,7 @@
 
       function initSwiper() {
         swiperInstance = new Swiper("#cardGrid", {
+          // モバイルデフォルト: 中央カード＋左右ピーク
           slidesPerView: "auto",
           centeredSlides: true,
           spaceBetween: 16,
@@ -651,6 +686,15 @@
           navigation: {
             nextEl: ".swiper-button-next",
             prevEl: ".swiper-button-prev",
+          },
+          // PC: 見開き2ページ表示
+          breakpoints: {
+            768: {
+              slidesPerView: 2,
+              slidesPerGroup: 2,
+              centeredSlides: false,
+              spaceBetween: 0,
+            },
           },
         });
       }
