@@ -226,6 +226,37 @@
     }
 
     /* =====================
+       Share bar
+    ===================== */
+    .share-bar {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      width: 100%;
+      max-width: 720px;
+      margin-top: 24px;
+    }
+
+    .share-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 11px 22px;
+      border-radius: 99px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-decoration: none;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .share-btn:hover  { opacity: 0.82; }
+    .share-btn:active { transform: scale(0.96); }
+
+    .share-btn--x    { background: #000;     color: #fff; }
+    .share-btn--line { background: #06C755;  color: #fff; }
+
+    /* =====================
        Empty state
     ===================== */
     .empty-state {
@@ -254,6 +285,24 @@
       ボタンを押すと<br>6つのお題が表示されます
     </p>
   </main>
+
+  <!-- SNS共有バー（カード表示後のみ表示） -->
+  <div class="share-bar" id="shareBar" hidden>
+    <a id="btnShareX"
+       class="share-btn share-btn--x"
+       href="#"
+       target="_blank"
+       rel="noopener noreferrer">
+      X でポスト
+    </a>
+    <a id="btnShareLine"
+       class="share-btn share-btn--line"
+       href="#"
+       target="_blank"
+       rel="noopener noreferrer">
+      LINE で送る
+    </a>
+  </div>
 
   <script>
     /* =====================================================================
@@ -444,11 +493,62 @@
       oldMedia.replaceWith(tmp.firstElementChild);
     }
 
+    /* =====================================================================
+       SNS共有層
+       - buildXShareURL / buildLINEShareURL は pageURL を引数で受け取る設計
+       - Supabase移行後は renderCards 内の location.href を保存済みURLに差し替えるだけ
+    ===================================================================== */
+
+    /**
+     * 現在DOMに表示中のお題テキストを収集してX投稿用文字列を生成する
+     * （DOMから取得することで表示と共有テキストを常に一致させる）
+     */
+    function buildShareText() {
+      const lines = [...document.querySelectorAll('.card__text')]
+        .map(el => `・${el.textContent.trim()}`);
+      return `【おもろ図鑑】\n${lines.join('\n')}\n#おもろ図鑑`;
+    }
+
+    /** X（Twitter）共有URLを生成 */
+    function buildXShareURL(pageURL) {
+      const text = buildShareText();
+      return (
+        'https://twitter.com/intent/tweet' +
+        `?text=${encodeURIComponent(text)}` +
+        `&url=${encodeURIComponent(pageURL)}`
+      );
+    }
+
+    /** LINE共有URLを生成 */
+    function buildLINEShareURL(pageURL) {
+      return (
+        'https://social-plugins.line.me/lineit/share' +
+        `?url=${encodeURIComponent(pageURL)}`
+      );
+    }
+
+    /**
+     * 共有バーの表示切替とhrefを更新する
+     * カードが0件（初期・空）のときは hidden にする
+     */
+    function updateShareBar() {
+      const shareBar = document.getElementById('shareBar');
+      const hasCards = document.querySelectorAll('.card').length > 0;
+      shareBar.hidden = !hasCards;
+      if (!hasCards) return;
+
+      // 将来Supabase移行時: location.href → 保存済み作品のURLに差し替える
+      const pageURL = location.href;
+      document.getElementById('btnShareX').href    = buildXShareURL(pageURL);
+      document.getElementById('btnShareLine').href = buildLINEShareURL(pageURL);
+    }
+
     /** カードグリッドを指定カテゴリのお題6件で更新 */
     async function renderCards(category) {
       const grid  = document.getElementById('cardGrid');
       const picks = await fetchTopics(category);
       grid.innerHTML = picks.map(createCardHTML).join('');
+      updateShareBar();
     }
 
     /** フィルターバーをCATEGORIES配列から生成 */
