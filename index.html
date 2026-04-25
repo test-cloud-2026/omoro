@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>おもろ図鑑</title>
+  <style>
+    /* =====================
+       Design tokens
+    ===================== */
+    :root {
+      --bg: #f7f6f2;
+      --surface: #ffffff;
+      --text-primary: #1c1c1e;
+      --text-secondary: #6e6e73;
+      --border: #e0dfd8;
+      --btn-bg: #1c1c1e;
+      --btn-text: #ffffff;
+      --btn-hover: #3a3a3c;
+      --radius: 12px;
+      --gap: 12px;
+
+      /* カテゴリカラー */
+      --c-horror: #8b1c2e;
+      --c-daily:  #2a6041;
+      --c-sf:     #1a3d7c;
+      --c-romance:#7c2a6a;
+    }
+
+    /* =====================
+       Reset / Base
+    ===================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 48px;
+    }
+
+    /* =====================
+       Header
+    ===================== */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .header__title {
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .header__subtitle {
+      margin-top: 6px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      letter-spacing: 0.02em;
+    }
+
+    /* =====================
+       Generate button
+    ===================== */
+    .btn-generate {
+      display: block;
+      width: 100%;
+      max-width: 360px;
+      margin: 0 auto 32px;
+      padding: 16px 24px;
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-generate:hover { background: var(--btn-hover); }
+    .btn-generate:active { transform: scale(0.97); }
+
+    /* =====================
+       Card grid
+       2col on mobile → 3col on wider screens
+    ===================== */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--gap);
+      width: 100%;
+      max-width: 720px;
+    }
+    @media (min-width: 600px) {
+      .card-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* =====================
+       Card
+    ===================== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      /* 拡張予定: 画像エリアを上に追加しやすいよう縦積み */
+      animation: fadeIn 0.3s ease both;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    /* カード番号ごとにアニメーション遅延 */
+    .card:nth-child(1) { animation-delay: 0.00s; }
+    .card:nth-child(2) { animation-delay: 0.05s; }
+    .card:nth-child(3) { animation-delay: 0.10s; }
+    .card:nth-child(4) { animation-delay: 0.15s; }
+    .card:nth-child(5) { animation-delay: 0.20s; }
+    .card:nth-child(6) { animation-delay: 0.25s; }
+
+    /* 将来の画像エリア（非表示で確保しておく）*/
+    .card__image-placeholder {
+      display: none; /* STEP2で有効化 */
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: var(--bg);
+      border-radius: 8px;
+    }
+
+    .card__category {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 2px 8px;
+      border-radius: 99px;
+      color: #fff;
+      align-self: flex-start;
+    }
+    .card__category--horror  { background: var(--c-horror); }
+    .card__category--daily   { background: var(--c-daily); }
+    .card__category--sf      { background: var(--c-sf); }
+    .card__category--romance { background: var(--c-romance); }
+
+    .card__text {
+      font-size: clamp(0.8rem, 2.5vw, 0.95rem);
+      line-height: 1.65;
+      flex: 1;
+    }
+
+    /* =====================
+       Empty state（初期表示）
+    ===================== */
+    .empty-state {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      padding: 32px 0;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ヘッダー -->
+  <header class="header">
+    <h1 class="header__title">おもろ図鑑</h1>
+    <p class="header__subtitle">抽象的なお題をランダムに6つ生成します</p>
+  </header>
+
+  <!-- 生成ボタン -->
+  <button class="btn-generate" id="btnGenerate">お題を生成する</button>
+
+  <!-- カード一覧 -->
+  <main class="card-grid" id="cardGrid" aria-live="polite">
+    <p class="empty-state" id="emptyState">
+      ボタンを押すと<br>6つのお題が表示されます
+    </p>
+  </main>
+
+  <script>
+    /* =====================================================================
+       データ層
+       - 各お題は { id, text, category } の形式
+       - category: 'horror' | 'daily' | 'sf' | 'romance'
+       - 将来的に画像URLや保存フラグを追加しやすい構造
+    ===================================================================== */
+    const TOPICS = [
+      // ── ホラー ──────────────────────────────────
+      { id: 'h01', text: '一瞬で心を奪い、視線が離れなくなる存在',          category: 'horror' },
+      { id: 'h02', text: '近づくと理由もなく不安になる気配',                  category: 'horror' },
+      { id: 'h03', text: '触れると記憶が少しだけ曖昧になる物体',              category: 'horror' },
+      { id: 'h04', text: '鏡の中だけに映り込む、名前のないもの',              category: 'horror' },
+      { id: 'h05', text: '写真を撮るたびに少しずつ増えている影',              category: 'horror' },
+      { id: 'h06', text: '深夜にだけ届く、送信者不明のメッセージ',            category: 'horror' },
+      { id: 'h07', text: '声に出した瞬間に忘れてしまう言葉',                  category: 'horror' },
+
+      // ── 日常 ────────────────────────────────────
+      { id: 'd01', text: '誰も座っていないのに、ほんのり温かい椅子',          category: 'daily' },
+      { id: 'd02', text: '毎朝同じ時刻に止まっている、壊れていない時計',      category: 'daily' },
+      { id: 'd03', text: '昨日まで確かにあったはずなのに誰も知らない棚',      category: 'daily' },
+      { id: 'd04', text: 'いつの間にか増えている食器',                        category: 'daily' },
+      { id: 'd05', text: '夕暮れ時にだけ聞こえる遠くの呼び声',                category: 'daily' },
+      { id: 'd06', text: '開けたはずなのに閉まっているドア',                  category: 'daily' },
+      { id: 'd07', text: 'なぜか懐かしいのに、思い出せない場所の匂い',        category: 'daily' },
+
+      // ── SF ──────────────────────────────────────
+      { id: 's01', text: '観測するたびに形が微妙に変わる物質',                category: 'sf' },
+      { id: 's02', text: '重力が逆に働く空間の、目に見えない境界線',          category: 'sf' },
+      { id: 's03', text: '記録には残っているのに誰も覚えていない出来事',      category: 'sf' },
+      { id: 's04', text: '時間の流れがほんの少しずれている場所',              category: 'sf' },
+      { id: 's05', text: '並行世界の自分が残した、読めない手書きのメモ',      category: 'sf' },
+      { id: 's06', text: 'みんなが知っているのに、辞書に載っていない言葉',    category: 'sf' },
+
+      // ── 乙女 ────────────────────────────────────
+      { id: 'r01', text: '視線が合うたびに心拍数が上がる、その理由',          category: 'romance' },
+      { id: 'r02', text: '記憶の中にしか残っていない甘い香り',                category: 'romance' },
+      { id: 'r03', text: '名前を呼ばれると体温が少し上がる感覚',              category: 'romance' },
+      { id: 'r04', text: '夢の中でだけ会える人の、見えない横顔',              category: 'romance' },
+      { id: 'r05', text: '無意識に探してしまう、誰かの手の温もり',            category: 'romance' },
+      { id: 'r06', text: '言葉にならないまま消えてしまった気持ち',            category: 'romance' },
+      { id: 'r07', text: '偶然が重なりすぎる出会いと、その意味',              category: 'romance' },
+    ];
+
+    /* カテゴリの表示ラベル */
+    const CATEGORY_LABELS = {
+      horror:  'ホラー',
+      daily:   '日常',
+      sf:      'SF',
+      romance: '乙女',
+    };
+
+    /* =====================================================================
+       ロジック層
+    ===================================================================== */
+
+    /**
+     * 配列からn件をランダムに重複なし抽出する
+     * @param {Array} arr
+     * @param {number} n
+     * @returns {Array}
+     */
+    function pickRandom(arr, n) {
+      const shuffled = [...arr].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, n);
+    }
+
+    /* =====================================================================
+       UI層
+    ===================================================================== */
+
+    /**
+     * カード1枚のHTMLを生成する
+     * 将来の拡張ポイント: card__image-placeholder を表示に切り替えるだけで画像対応
+     */
+    function createCardHTML(topic) {
+      return `
+        <article class="card" data-id="${topic.id}" data-category="${topic.category}">
+          <div class="card__image-placeholder"></div>
+          <span class="card__category card__category--${topic.category}">
+            ${CATEGORY_LABELS[topic.category]}
+          </span>
+          <p class="card__text">${topic.text}</p>
+        </article>
+      `;
+    }
+
+    /** カードグリッドを6件のお題で更新する */
+    function renderCards() {
+      const grid  = document.getElementById('cardGrid');
+      const picks = pickRandom(TOPICS, 6);
+
+      // アニメーションを毎回リセットするため innerHTML を差し替え
+      grid.innerHTML = picks.map(createCardHTML).join('');
+    }
+
+    /* =====================================================================
+       イベント登録
+    ===================================================================== */
+    document.getElementById('btnGenerate').addEventListener('click', renderCards);
+  </script>
+</body>
+</html>
