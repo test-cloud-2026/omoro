@@ -513,6 +513,25 @@
       }
 
       /**
+       * works テーブルから id で1件取得する
+       * @param {string} workId
+       * @returns {Promise<{id, title, topics, images}>}
+       */
+      async function fetchWork(workId) {
+        if (!supabaseClient) {
+          throw new Error("Supabase未設定：SUPABASE_URL と SUPABASE_ANON_KEY を入力してください");
+        }
+        const { data, error } = await supabaseClient
+          .from("works")
+          .select("id, title, topics, images")
+          .eq("id", workId)
+          .single();
+
+        if (error) throw new Error(error.message);
+        return data;
+      }
+
+      /**
        * 保存ボタンのUIハンドラ
        * - 保存成功後、共有URLを「?work=<id>」形式に更新する
        */
@@ -731,6 +750,54 @@
         document.getElementById("btnShareLine").href = buildLINEShareURL(pageURL);
       }
 
+      /**
+       * Supabase から取得した作品データを画面に復元する
+       * - topics ({id, text, category}[]) と images ({topicId: DataURL|null}) をマージして描画
+       * - TOPICS のimageフィールドも更新し、以降のupdateCardMediaと整合させる
+       */
+      function restoreWork(work) {
+        const topicsWithImages = work.topics.map((t) => ({
+          ...t,
+          image: work.images?.[t.id] ?? null,
+        }));
+
+        // TOPICS本体のimageを更新（画像の変更操作に使われる）
+        topicsWithImages.forEach((t) => {
+          const master = TOPICS.find((tp) => tp.id === t.id);
+          if (master) master.image = t.image;
+        });
+
+        const grid = document.getElementById("cardGrid");
+        grid.innerHTML = topicsWithImages.map(createCardHTML).join("");
+        updateSaveSection();
+        updateShareBar(location.href);
+      }
+
+      /**
+       * URLの ?work= パラメータを見て作品を自動復元する
+       * - パラメータがある → Supabase から取得して restoreWork()
+       * - パラメータがない → 何もしない（通常の生成UIを表示）
+       * @returns {Promise<boolean>} 復元したかどうか
+       */
+      async function loadFromURL() {
+        const workId = new URLSearchParams(location.search).get("work");
+        if (!workId) return false;
+
+        const grid = document.getElementById("cardGrid");
+        grid.innerHTML = '<p class="empty-state">読み込み中...</p>';
+
+        try {
+          const work = await fetchWork(workId);
+          restoreWork(work);
+          console.log("[おもろ図鑑] 作品を復元しました id:", work.id);
+          return true;
+        } catch (err) {
+          console.error("[おもろ図鑑] 復元失敗:", err);
+          grid.innerHTML = '<p class="empty-state">作品が見つかりません</p>';
+          return false;
+        }
+      }
+
       /** カードグリッドを指定カテゴリのお題6件で更新 */
       async function renderCards(category) {
         const grid = document.getElementById("cardGrid");
@@ -785,6 +852,7 @@
 
       /* 起動時 */
       initFilterBar();
+      loadFromURL(); // ?work=<UUID> があれば自動復元、なければ通常表示
     </script>
   </body>
 </html>
