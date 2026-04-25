@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>おもろ図鑑</title>
+  <!-- Supabase JS クライアント（UMD） -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     /* =====================
        Design tokens
@@ -226,6 +228,43 @@
     }
 
     /* =====================
+       Save section
+    ===================== */
+    .save-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 720px;
+      margin-top: 24px;
+    }
+
+    .btn-save {
+      padding: 13px 32px;
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s, opacity 0.15s;
+    }
+    .btn-save:hover    { background: var(--btn-hover); }
+    .btn-save:active   { transform: scale(0.97); }
+    .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .save-status {
+      font-size: 0.875rem;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .save-status--success { color: #2a6041; }
+    .save-status--error   { color: #8b1c2e; }
+
+    /* =====================
        Share bar
     ===================== */
     .share-bar {
@@ -285,6 +324,12 @@
       ボタンを押すと<br>6つのお題が表示されます
     </p>
   </main>
+
+  <!-- 保存セクション（カード表示後のみ表示） -->
+  <div class="save-section" id="saveSection" hidden>
+    <button class="btn-save" id="btnSave">この作品を保存する</button>
+    <p class="save-status" id="saveStatus" hidden></p>
+  </div>
 
   <!-- SNS共有バー（カード表示後のみ表示） -->
   <div class="share-bar" id="shareBar" hidden>
@@ -361,6 +406,99 @@
       { key: 'sf',      label: 'SF' },
       { key: 'romance', label: '乙女' },
     ];
+
+    /* =====================================================================
+       Supabase設定
+       ─ 自分のプロジェクトURLとAnon Keyに書き換えてください ─
+    ===================================================================== */
+    const SUPABASE_URL      = '';  // 例: https://xxxxxxxxxxxx.supabase.co
+    const SUPABASE_ANON_KEY = '';  // 例: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    const { createClient } = window.supabase;
+    const supabaseClient = (SUPABASE_URL && SUPABASE_ANON_KEY)
+      ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+
+    /* =====================================================================
+       保存層
+       - collectCurrentWork(): 現在表示中の6件を DB スキーマ形式に整形
+       - saveWork(): Supabase の works テーブルに insert して id を返す
+       - handleSave(): UI の状態管理（loading / success / error）
+    ===================================================================== */
+
+    /**
+     * DOM のカード一覧から現在表示中の作品データを収集する
+     * - topics: テキスト情報のみの配列（DB の topics カラムに対応）
+     * - images: { topicId: DataURL | null }（DB の images カラムに対応）
+     */
+    function collectCurrentWork() {
+      const cards  = [...document.querySelectorAll('.card')];
+      const topics = cards.map(card => {
+        const t = TOPICS.find(tp => tp.id === card.dataset.id);
+        return { id: t.id, text: t.text, category: t.category };
+      });
+      const images = Object.fromEntries(
+        topics.map(t => [t.id, TOPICS.find(tp => tp.id === t.id)?.image ?? null])
+      );
+      return { topics, images };
+    }
+
+    /**
+     * works テーブルに insert して生成された id を返す
+     * 将来: images 内の DataURL を Storage にアップロードしてから URL に差し替える
+     * @returns {Promise<string>} 保存された作品の id
+     */
+    async function saveWork() {
+      if (!supabaseClient) {
+        throw new Error('Supabase未設定：SUPABASE_URL と SUPABASE_ANON_KEY を入力してください');
+      }
+
+      const { topics, images } = collectCurrentWork();
+      const { data, error } = await supabaseClient
+        .from('works')
+        .insert({ title: 'おもろ図鑑', topics, images })
+        .select('id')
+        .single();
+
+      if (error) throw new Error(error.message);
+      return data.id;
+    }
+
+    /**
+     * 保存ボタンのUIハンドラ
+     * - 保存成功後、共有URLを「?work=<id>」形式に更新する
+     */
+    async function handleSave() {
+      const btn    = document.getElementById('btnSave');
+      const status = document.getElementById('saveStatus');
+
+      btn.disabled    = true;
+      btn.textContent = '保存中...';
+      status.hidden   = true;
+      status.className = 'save-status';
+
+      try {
+        const savedId  = await saveWork();
+        // 将来: この URL をベースに作品ページ（/works/:id）を作れる
+        const workURL  = `${location.origin}${location.pathname}?work=${savedId}`;
+
+        status.textContent = `保存しました（ID: ${savedId}）`;
+        status.className   = 'save-status save-status--success';
+        status.hidden      = false;
+
+        // 共有バーの URL を保存済み作品URLに更新
+        updateShareBar(workURL);
+
+      } catch (err) {
+        status.textContent = `保存に失敗しました: ${err.message}`;
+        status.className   = 'save-status save-status--error';
+        status.hidden      = false;
+
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = 'この作品を保存する';
+      }
+    }
 
     /* =====================================================================
        ロジック層
@@ -528,17 +666,34 @@
     }
 
     /**
-     * 共有バーの表示切替とhrefを更新する
-     * カードが0件（初期・空）のときは hidden にする
+     * 保存セクションの表示切替
+     * 新しいカード生成のたびにステータス表示をリセットする
      */
-    function updateShareBar() {
+    function updateSaveSection() {
+      const section  = document.getElementById('saveSection');
+      const hasCards = document.querySelectorAll('.card').length > 0;
+      section.hidden = !hasCards;
+
+      // 新規生成時は前回の保存結果をリセット
+      const status = document.getElementById('saveStatus');
+      status.hidden    = true;
+      status.textContent = '';
+      status.className   = 'save-status';
+      const btn = document.getElementById('btnSave');
+      btn.disabled    = false;
+      btn.textContent = 'この作品を保存する';
+    }
+
+    /**
+     * 共有バーの表示切替とhrefを更新する
+     * @param {string} [pageURL] 省略時は location.href。保存後は workURL を渡す
+     */
+    function updateShareBar(pageURL = location.href) {
       const shareBar = document.getElementById('shareBar');
       const hasCards = document.querySelectorAll('.card').length > 0;
       shareBar.hidden = !hasCards;
       if (!hasCards) return;
 
-      // 将来Supabase移行時: location.href → 保存済み作品のURLに差し替える
-      const pageURL = location.href;
       document.getElementById('btnShareX').href    = buildXShareURL(pageURL);
       document.getElementById('btnShareLine').href = buildLINEShareURL(pageURL);
     }
@@ -548,7 +703,8 @@
       const grid  = document.getElementById('cardGrid');
       const picks = await fetchTopics(category);
       grid.innerHTML = picks.map(createCardHTML).join('');
-      updateShareBar();
+      updateSaveSection();
+      updateShareBar();  // 新規生成時は location.href でリセット
     }
 
     /** フィルターバーをCATEGORIES配列から生成 */
@@ -589,6 +745,9 @@
 
       handleImageUpload(id, e.target.files[0]);
     });
+
+    /* 保存ボタン */
+    document.getElementById('btnSave').addEventListener('click', handleSave);
 
     /* 起動時 */
     initFilterBar();
