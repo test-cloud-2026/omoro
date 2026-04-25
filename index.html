@@ -133,6 +133,8 @@
       .swiper-slide {
         width: 78%;
         max-width: 300px;
+        display: flex;
+        flex-direction: column;
       }
 
       /* PC: カード幅を固定して中央カード＋左右見切れが安定して見える */
@@ -154,6 +156,7 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
+        height: 100%;
         animation: fadeIn 0.3s ease both;
       }
       @keyframes fadeIn {
@@ -284,6 +287,11 @@
         font-size: clamp(0.8rem, 2.5vw, 0.95rem);
         line-height: 1.65;
         flex: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        line-clamp: 4;
+        overflow: hidden;
       }
 
       /* =====================
