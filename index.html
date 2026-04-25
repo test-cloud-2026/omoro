@@ -140,11 +140,24 @@
       /* PC: 見開きレイアウト */
       @media (min-width: 768px) {
         /* Swiper が slidesPerView:2 で幅を自動計算するため max-width のみ解除 */
+        /* めくり感トランジションも PC のみに適用 */
         .swiper-slide {
           max-width: none;
+          transition:
+            transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+            opacity 0.3s ease;
+          opacity: 0.82;
+          transform: scale(0.985);
         }
 
-        /* 見開きの綴じ目（スパイン） */
+        /* アクティブな見開き2枚（左ページ＋右ページ）は通常表示 */
+        .swiper-slide-active,
+        .swiper-slide-next {
+          opacity: 1;
+          transform: scale(1);
+        }
+
+        /* 見開きのくぼみ（綴じ目）: radial-gradient で影を表現 */
         #cardGrid {
           position: relative;
         }
@@ -152,30 +165,34 @@
           content: "";
           position: absolute;
           left: 50%;
-          top: 6%;
-          bottom: 6%;
-          width: 1px;
-          background: linear-gradient(
-            to bottom,
-            transparent,
-            rgba(0, 0, 0, 0.13) 18%,
-            rgba(0, 0, 0, 0.13) 82%,
-            transparent
+          transform: translateX(-50%);
+          top: 0;
+          bottom: 0;
+          width: 60px;
+          background: radial-gradient(
+            ellipse 100% 55% at 50% 50%,
+            rgba(0, 0, 0, 0.15) 0%,
+            rgba(0, 0, 0, 0.07) 40%,
+            transparent 68%
           );
-          z-index: 1;
+          z-index: 5;
           pointer-events: none;
         }
 
-        /* 左ページ（奇数スライド）: 影を右（綴じ目）側へ */
+        /* 左ページ（奇数スライド）: 外側＋内側（綴じ目側）に影で紙の厚みを表現 */
         .swiper-slide:nth-child(odd) .card {
           border-radius: var(--radius) 2px 2px var(--radius);
-          box-shadow: 3px 0 10px rgba(0, 0, 0, 0.07);
+          box-shadow:
+            -5px 0 16px rgba(0, 0, 0, 0.08),
+            inset -12px 0 24px rgba(0, 0, 0, 0.05);
         }
 
-        /* 右ページ（偶数スライド）: 影を左（綴じ目）側へ */
+        /* 右ページ（偶数スライド）: 外側＋内側（綴じ目側）に影で紙の厚みを表現 */
         .swiper-slide:nth-child(even) .card {
           border-radius: 2px var(--radius) var(--radius) 2px;
-          box-shadow: -3px 0 10px rgba(0, 0, 0, 0.07);
+          box-shadow:
+            5px 0 16px rgba(0, 0, 0, 0.08),
+            inset 12px 0 24px rgba(0, 0, 0, 0.05);
         }
       }
 
