@@ -1,585 +1,626 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>おもろ図鑑</title>
-  <!-- Supabase JS クライアント（UMD） -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <style>
-    /* =====================
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>おもろ図鑑</title>
+    <!-- Supabase JS クライアント（UMD） -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+      /* =====================
        Design tokens
     ===================== */
-    :root {
-      --bg: #f7f6f2;
-      --surface: #ffffff;
-      --text-primary: #1c1c1e;
-      --text-secondary: #6e6e73;
-      --border: #e0dfd8;
-      --btn-bg: #1c1c1e;
-      --btn-text: #ffffff;
-      --btn-hover: #3a3a3c;
-      --radius: 12px;
-      --gap: 12px;
+      :root {
+        --bg: #f7f6f2;
+        --surface: #ffffff;
+        --text-primary: #1c1c1e;
+        --text-secondary: #6e6e73;
+        --border: #e0dfd8;
+        --btn-bg: #1c1c1e;
+        --btn-text: #ffffff;
+        --btn-hover: #3a3a3c;
+        --radius: 12px;
+        --gap: 12px;
 
-      /* カテゴリカラー */
-      --c-horror: #8b1c2e;
-      --c-daily:  #2a6041;
-      --c-sf:     #1a3d7c;
-      --c-romance:#7c2a6a;
-    }
+        /* カテゴリカラー */
+        --c-horror: #8b1c2e;
+        --c-daily: #2a6041;
+        --c-sf: #1a3d7c;
+        --c-romance: #7c2a6a;
+      }
 
-    /* =====================
+      /* =====================
        Reset / Base
     ===================== */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
-      background: var(--bg);
-      color: var(--text-primary);
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 32px 16px 48px;
-    }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+        background: var(--bg);
+        color: var(--text-primary);
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 32px 16px 48px;
+      }
 
-    /* =====================
+      /* =====================
        Header
     ===================== */
-    .header {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-    .header__title {
-      font-size: clamp(1.6rem, 5vw, 2.4rem);
-      font-weight: 700;
-      letter-spacing: 0.04em;
-    }
-    .header__subtitle {
-      margin-top: 6px;
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-      letter-spacing: 0.02em;
-    }
+      .header {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+      .header__title {
+        font-size: clamp(1.6rem, 5vw, 2.4rem);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      .header__subtitle {
+        margin-top: 6px;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        letter-spacing: 0.02em;
+      }
 
-    /* =====================
+      /* =====================
        Filter bar
     ===================== */
-    .filter-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      width: 100%;
-      max-width: 720px;
-      margin-bottom: 28px;
-    }
+      .filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        width: 100%;
+        max-width: 720px;
+        margin-bottom: 28px;
+      }
 
-    .filter-btn {
-      padding: 10px 20px;
-      border: 1.5px solid var(--border);
-      border-radius: 99px;
-      background: var(--surface);
-      color: var(--text-primary);
-      font-size: 0.9rem;
-      font-weight: 600;
-      letter-spacing: 0.03em;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
-    }
-    .filter-btn:hover { border-color: var(--text-secondary); }
-    .filter-btn:active { transform: scale(0.96); }
+      .filter-btn {
+        padding: 10px 20px;
+        border: 1.5px solid var(--border);
+        border-radius: 99px;
+        background: var(--surface);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          color 0.15s,
+          border-color 0.15s,
+          transform 0.1s;
+      }
+      .filter-btn:hover {
+        border-color: var(--text-secondary);
+      }
+      .filter-btn:active {
+        transform: scale(0.96);
+      }
 
-    .filter-btn.is-active {
-      background: var(--btn-bg);
-      color: var(--btn-text);
-      border-color: var(--btn-bg);
-    }
+      .filter-btn.is-active {
+        background: var(--btn-bg);
+        color: var(--btn-text);
+        border-color: var(--btn-bg);
+      }
 
-    /* =====================
+      /* =====================
        Card grid
        2col on mobile → 3col on wider screens
     ===================== */
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--gap);
-      width: 100%;
-      max-width: 720px;
-    }
-    @media (min-width: 600px) {
-      .card-grid { grid-template-columns: repeat(3, 1fr); }
-    }
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--gap);
+        width: 100%;
+        max-width: 720px;
+      }
+      @media (min-width: 600px) {
+        .card-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
 
-    /* =====================
+      /* =====================
        Card
     ===================== */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px 14px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      animation: fadeIn 0.3s ease both;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .card:nth-child(1) { animation-delay: 0.00s; }
-    .card:nth-child(2) { animation-delay: 0.05s; }
-    .card:nth-child(3) { animation-delay: 0.10s; }
-    .card:nth-child(4) { animation-delay: 0.15s; }
-    .card:nth-child(5) { animation-delay: 0.20s; }
-    .card:nth-child(6) { animation-delay: 0.25s; }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px 14px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        animation: fadeIn 0.3s ease both;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .card:nth-child(1) {
+        animation-delay: 0s;
+      }
+      .card:nth-child(2) {
+        animation-delay: 0.05s;
+      }
+      .card:nth-child(3) {
+        animation-delay: 0.1s;
+      }
+      .card:nth-child(4) {
+        animation-delay: 0.15s;
+      }
+      .card:nth-child(5) {
+        animation-delay: 0.2s;
+      }
+      .card:nth-child(6) {
+        animation-delay: 0.25s;
+      }
 
-    /* =====================
+      /* =====================
        Card media area
     ===================== */
-    .card__media {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 4/3;
-      border-radius: 8px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--bg);
-    }
+      .card__media {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4/3;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg);
+      }
 
-    /* アップロード済み画像 */
-    .card__image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
+      /* アップロード済み画像 */
+      .card__image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
 
-    /* 画像なし時のプレースホルダー兼アップロードボタン */
-    .card__upload-label {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      width: 100%;
-      height: 100%;
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      cursor: pointer;
-      border: 1.5px dashed var(--border);
-      border-radius: 8px;
-      transition: border-color 0.15s, color 0.15s;
-    }
-    .card__upload-label:hover {
-      border-color: var(--text-primary);
-      color: var(--text-primary);
-    }
-    .card__upload-label__icon {
-      font-size: 1.4rem;
-      line-height: 1;
-    }
+      /* 画像なし時のプレースホルダー兼アップロードボタン */
+      .card__upload-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+        height: 100%;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        border: 1.5px dashed var(--border);
+        border-radius: 8px;
+        transition:
+          border-color 0.15s,
+          color 0.15s;
+      }
+      .card__upload-label:hover {
+        border-color: var(--text-primary);
+        color: var(--text-primary);
+      }
+      .card__upload-label__icon {
+        font-size: 1.4rem;
+        line-height: 1;
+      }
 
-    /* 画像あり時の「変更」ボタン（画像の上に重ねる） */
-    .card__replace-label {
-      position: absolute;
-      bottom: 6px;
-      right: 6px;
-      padding: 3px 8px;
-      border-radius: 6px;
-      background: rgba(0, 0, 0, 0.5);
-      color: #fff;
-      font-size: 0.7rem;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .card__replace-label:hover {
-      background: rgba(0, 0, 0, 0.75);
-    }
+      /* 画像あり時の「変更」ボタン（画像の上に重ねる） */
+      .card__replace-label {
+        position: absolute;
+        bottom: 6px;
+        right: 6px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .card__replace-label:hover {
+        background: rgba(0, 0, 0, 0.75);
+      }
 
-    /* =====================
+      /* =====================
        Card body
     ===================== */
-    .card__category {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      padding: 2px 8px;
-      border-radius: 99px;
-      color: #fff;
-      align-self: flex-start;
-    }
-    .card__category--horror  { background: var(--c-horror); }
-    .card__category--daily   { background: var(--c-daily); }
-    .card__category--sf      { background: var(--c-sf); }
-    .card__category--romance { background: var(--c-romance); }
+      .card__category {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        padding: 2px 8px;
+        border-radius: 99px;
+        color: #fff;
+        align-self: flex-start;
+      }
+      .card__category--horror {
+        background: var(--c-horror);
+      }
+      .card__category--daily {
+        background: var(--c-daily);
+      }
+      .card__category--sf {
+        background: var(--c-sf);
+      }
+      .card__category--romance {
+        background: var(--c-romance);
+      }
 
-    .card__text {
-      font-size: clamp(0.8rem, 2.5vw, 0.95rem);
-      line-height: 1.65;
-      flex: 1;
-    }
+      .card__text {
+        font-size: clamp(0.8rem, 2.5vw, 0.95rem);
+        line-height: 1.65;
+        flex: 1;
+      }
 
-    /* =====================
+      /* =====================
        Save section
     ===================== */
-    .save-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      width: 100%;
-      max-width: 720px;
-      margin-top: 24px;
-    }
+      .save-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        max-width: 720px;
+        margin-top: 24px;
+      }
 
-    .btn-save {
-      padding: 13px 32px;
-      background: var(--btn-bg);
-      color: var(--btn-text);
-      border: none;
-      border-radius: var(--radius);
-      font-size: 0.95rem;
-      font-weight: 600;
-      letter-spacing: 0.03em;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.1s, opacity 0.15s;
-    }
-    .btn-save:hover    { background: var(--btn-hover); }
-    .btn-save:active   { transform: scale(0.97); }
-    .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+      .btn-save {
+        padding: 13px 32px;
+        background: var(--btn-bg);
+        color: var(--btn-text);
+        border: none;
+        border-radius: var(--radius);
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          transform 0.1s,
+          opacity 0.15s;
+      }
+      .btn-save:hover {
+        background: var(--btn-hover);
+      }
+      .btn-save:active {
+        transform: scale(0.97);
+      }
+      .btn-save:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
 
-    .save-status {
-      font-size: 0.875rem;
-      text-align: center;
-      line-height: 1.6;
-    }
-    .save-status--success { color: #2a6041; }
-    .save-status--error   { color: #8b1c2e; }
+      .save-status {
+        font-size: 0.875rem;
+        text-align: center;
+        line-height: 1.6;
+      }
+      .save-status--success {
+        color: #2a6041;
+      }
+      .save-status--error {
+        color: #8b1c2e;
+      }
 
-    /* =====================
+      /* =====================
        Share bar
     ===================== */
-    .share-bar {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-      width: 100%;
-      max-width: 720px;
-      margin-top: 24px;
-    }
+      .share-bar {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+        width: 100%;
+        max-width: 720px;
+        margin-top: 24px;
+      }
 
-    .share-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 11px 22px;
-      border-radius: 99px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      letter-spacing: 0.03em;
-      text-decoration: none;
-      transition: opacity 0.15s, transform 0.1s;
-    }
-    .share-btn:hover  { opacity: 0.82; }
-    .share-btn:active { transform: scale(0.96); }
+      .share-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 11px 22px;
+        border-radius: 99px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        text-decoration: none;
+        transition:
+          opacity 0.15s,
+          transform 0.1s;
+      }
+      .share-btn:hover {
+        opacity: 0.82;
+      }
+      .share-btn:active {
+        transform: scale(0.96);
+      }
 
-    .share-btn--x    { background: #000;     color: #fff; }
-    .share-btn--line { background: #06C755;  color: #fff; }
+      .share-btn--x {
+        background: #000;
+        color: #fff;
+      }
+      .share-btn--line {
+        background: #06c755;
+        color: #fff;
+      }
 
-    /* =====================
+      /* =====================
        Empty state
     ===================== */
-    .empty-state {
-      text-align: center;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      padding: 32px 0;
-      line-height: 1.8;
-    }
-  </style>
-</head>
-<body>
+      .empty-state {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        padding: 32px 0;
+        line-height: 1.8;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ヘッダー -->
+    <header class="header">
+      <h1 class="header__title">おもろ図鑑</h1>
+      <p class="header__subtitle">カテゴリを選んでお題を6つ生成します</p>
+    </header>
 
-  <!-- ヘッダー -->
-  <header class="header">
-    <h1 class="header__title">おもろ図鑑</h1>
-    <p class="header__subtitle">カテゴリを選んでお題を6つ生成します</p>
-  </header>
+    <!-- フィルターバー（JS で生成） -->
+    <nav class="filter-bar" id="filterBar" aria-label="カテゴリ選択"></nav>
 
-  <!-- フィルターバー（JS で生成） -->
-  <nav class="filter-bar" id="filterBar" aria-label="カテゴリ選択"></nav>
+    <!-- カード一覧 -->
+    <main class="card-grid" id="cardGrid" aria-live="polite">
+      <p class="empty-state">ボタンを押すと<br />6つのお題が表示されます</p>
+    </main>
 
-  <!-- カード一覧 -->
-  <main class="card-grid" id="cardGrid" aria-live="polite">
-    <p class="empty-state">
-      ボタンを押すと<br>6つのお題が表示されます
-    </p>
-  </main>
+    <!-- 保存セクション（カード表示後のみ表示） -->
+    <div class="save-section" id="saveSection" hidden>
+      <button class="btn-save" id="btnSave">この作品を保存する</button>
+      <p class="save-status" id="saveStatus" hidden></p>
+    </div>
 
-  <!-- 保存セクション（カード表示後のみ表示） -->
-  <div class="save-section" id="saveSection" hidden>
-    <button class="btn-save" id="btnSave">この作品を保存する</button>
-    <p class="save-status" id="saveStatus" hidden></p>
-  </div>
+    <!-- SNS共有バー（カード表示後のみ表示） -->
+    <div class="share-bar" id="shareBar" hidden>
+      <a id="btnShareX" class="share-btn share-btn--x" href="#" target="_blank" rel="noopener noreferrer"> X でポスト </a>
+      <a id="btnShareLine" class="share-btn share-btn--line" href="#" target="_blank" rel="noopener noreferrer"> LINE で送る </a>
+    </div>
 
-  <!-- SNS共有バー（カード表示後のみ表示） -->
-  <div class="share-bar" id="shareBar" hidden>
-    <a id="btnShareX"
-       class="share-btn share-btn--x"
-       href="#"
-       target="_blank"
-       rel="noopener noreferrer">
-      X でポスト
-    </a>
-    <a id="btnShareLine"
-       class="share-btn share-btn--line"
-       href="#"
-       target="_blank"
-       rel="noopener noreferrer">
-      LINE で送る
-    </a>
-  </div>
-
-  <script>
-    /* =====================================================================
+    <script>
+      /* =====================================================================
        データ層
        - 各お題は { id, text, category, image } の形式
        - image: null | DataURL文字列
        - image はTOPICSオブジェクト自体に保持する（stateとデータを統合）
        - 将来: Supabase移行時は image を Storage URL に置き換える
     ===================================================================== */
-    const TOPICS = [
-      // ── ホラー ──────────────────────────────────
-      { id: 'h01', text: '一瞬で心を奪い、視線が離れなくなる存在',         category: 'horror',  image: null },
-      { id: 'h02', text: '近づくと理由もなく不安になる気配',                category: 'horror',  image: null },
-      { id: 'h03', text: '触れると記憶が少しだけ曖昧になる物体',            category: 'horror',  image: null },
-      { id: 'h04', text: '鏡の中だけに映り込む、名前のないもの',            category: 'horror',  image: null },
-      { id: 'h05', text: '写真を撮るたびに少しずつ増えている影',            category: 'horror',  image: null },
-      { id: 'h06', text: '深夜にだけ届く、送信者不明のメッセージ',          category: 'horror',  image: null },
-      { id: 'h07', text: '声に出した瞬間に忘れてしまう言葉',                category: 'horror',  image: null },
+      const TOPICS = [
+        // ── ホラー ──────────────────────────────────
+        { id: "h01", text: "一瞬で心を奪い、視線が離れなくなる存在", category: "horror", image: null },
+        { id: "h02", text: "近づくと理由もなく不安になる気配", category: "horror", image: null },
+        { id: "h03", text: "触れると記憶が少しだけ曖昧になる物体", category: "horror", image: null },
+        { id: "h04", text: "鏡の中だけに映り込む、名前のないもの", category: "horror", image: null },
+        { id: "h05", text: "写真を撮るたびに少しずつ増えている影", category: "horror", image: null },
+        { id: "h06", text: "深夜にだけ届く、送信者不明のメッセージ", category: "horror", image: null },
+        { id: "h07", text: "声に出した瞬間に忘れてしまう言葉", category: "horror", image: null },
 
-      // ── 日常 ────────────────────────────────────
-      { id: 'd01', text: '誰も座っていないのに、ほんのり温かい椅子',        category: 'daily',   image: null },
-      { id: 'd02', text: '毎朝同じ時刻に止まっている、壊れていない時計',    category: 'daily',   image: null },
-      { id: 'd03', text: '昨日まで確かにあったはずなのに誰も知らない棚',    category: 'daily',   image: null },
-      { id: 'd04', text: 'いつの間にか増えている食器',                      category: 'daily',   image: null },
-      { id: 'd05', text: '夕暮れ時にだけ聞こえる遠くの呼び声',              category: 'daily',   image: null },
-      { id: 'd06', text: '開けたはずなのに閉まっているドア',                category: 'daily',   image: null },
-      { id: 'd07', text: 'なぜか懐かしいのに、思い出せない場所の匂い',      category: 'daily',   image: null },
+        // ── 日常 ────────────────────────────────────
+        { id: "d01", text: "誰も座っていないのに、ほんのり温かい椅子", category: "daily", image: null },
+        { id: "d02", text: "毎朝同じ時刻に止まっている、壊れていない時計", category: "daily", image: null },
+        { id: "d03", text: "昨日まで確かにあったはずなのに誰も知らない棚", category: "daily", image: null },
+        { id: "d04", text: "いつの間にか増えている食器", category: "daily", image: null },
+        { id: "d05", text: "夕暮れ時にだけ聞こえる遠くの呼び声", category: "daily", image: null },
+        { id: "d06", text: "開けたはずなのに閉まっているドア", category: "daily", image: null },
+        { id: "d07", text: "なぜか懐かしいのに、思い出せない場所の匂い", category: "daily", image: null },
 
-      // ── SF ──────────────────────────────────────
-      { id: 's01', text: '観測するたびに形が微妙に変わる物質',              category: 'sf',      image: null },
-      { id: 's02', text: '重力が逆に働く空間の、目に見えない境界線',        category: 'sf',      image: null },
-      { id: 's03', text: '記録には残っているのに誰も覚えていない出来事',    category: 'sf',      image: null },
-      { id: 's04', text: '時間の流れがほんの少しずれている場所',            category: 'sf',      image: null },
-      { id: 's05', text: '並行世界の自分が残した、読めない手書きのメモ',    category: 'sf',      image: null },
-      { id: 's06', text: 'みんなが知っているのに、辞書に載っていない言葉',  category: 'sf',      image: null },
+        // ── SF ──────────────────────────────────────
+        { id: "s01", text: "観測するたびに形が微妙に変わる物質", category: "sf", image: null },
+        { id: "s02", text: "重力が逆に働く空間の、目に見えない境界線", category: "sf", image: null },
+        { id: "s03", text: "記録には残っているのに誰も覚えていない出来事", category: "sf", image: null },
+        { id: "s04", text: "時間の流れがほんの少しずれている場所", category: "sf", image: null },
+        { id: "s05", text: "並行世界の自分が残した、読めない手書きのメモ", category: "sf", image: null },
+        { id: "s06", text: "みんなが知っているのに、辞書に載っていない言葉", category: "sf", image: null },
 
-      // ── 乙女 ────────────────────────────────────
-      { id: 'r01', text: '視線が合うたびに心拍数が上がる、その理由',        category: 'romance', image: null },
-      { id: 'r02', text: '記憶の中にしか残っていない甘い香り',              category: 'romance', image: null },
-      { id: 'r03', text: '名前を呼ばれると体温が少し上がる感覚',            category: 'romance', image: null },
-      { id: 'r04', text: '夢の中でだけ会える人の、見えない横顔',            category: 'romance', image: null },
-      { id: 'r05', text: '無意識に探してしまう、誰かの手の温もり',          category: 'romance', image: null },
-      { id: 'r06', text: '言葉にならないまま消えてしまった気持ち',          category: 'romance', image: null },
-      { id: 'r07', text: '偶然が重なりすぎる出会いと、その意味',            category: 'romance', image: null },
-    ];
+        // ── 乙女 ────────────────────────────────────
+        { id: "r01", text: "視線が合うたびに心拍数が上がる、その理由", category: "romance", image: null },
+        { id: "r02", text: "記憶の中にしか残っていない甘い香り", category: "romance", image: null },
+        { id: "r03", text: "名前を呼ばれると体温が少し上がる感覚", category: "romance", image: null },
+        { id: "r04", text: "夢の中でだけ会える人の、見えない横顔", category: "romance", image: null },
+        { id: "r05", text: "無意識に探してしまう、誰かの手の温もり", category: "romance", image: null },
+        { id: "r06", text: "言葉にならないまま消えてしまった気持ち", category: "romance", image: null },
+        { id: "r07", text: "偶然が重なりすぎる出会いと、その意味", category: "romance", image: null },
+      ];
 
-    /* =====================================================================
+      /* =====================================================================
        カテゴリ定義
        - ボタン生成・フィルタリング・ラベル表示の単一ソース
        - key: null = 全カテゴリ（ランダム）
     ===================================================================== */
-    const CATEGORIES = [
-      { key: null,      label: 'ランダム' },
-      { key: 'horror',  label: 'ホラー' },
-      { key: 'daily',   label: '日常' },
-      { key: 'sf',      label: 'SF' },
-      { key: 'romance', label: '乙女' },
-    ];
+      const CATEGORIES = [
+        { key: null, label: "ランダム" },
+        { key: "horror", label: "ホラー" },
+        { key: "daily", label: "日常" },
+        { key: "sf", label: "SF" },
+        { key: "romance", label: "乙女" },
+      ];
 
-    /* =====================================================================
+      /* =====================================================================
        Supabase設定
        ─ 自分のプロジェクトURLとAnon Keyに書き換えてください ─
     ===================================================================== */
-    const SUPABASE_URL      = '';  // 例: https://xxxxxxxxxxxx.supabase.co
-    const SUPABASE_ANON_KEY = '';  // 例: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      const SUPABASE_URL = "https://pwrvjnmewcuithobsqke.supabase.co"; // 例: https://xxxxxxxxxxxx.supabase.co
+      const SUPABASE_ANON_KEY = "sb_publishable_lTdnyAoLiDmSVnHpblWQag_MytaZZyw"; // 例: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
-    const { createClient } = window.supabase;
-    const supabaseClient = (SUPABASE_URL && SUPABASE_ANON_KEY)
-      ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-      : null;
+      const { createClient } = window.supabase;
+      const supabaseClient = SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-    /* =====================================================================
+      /* =====================================================================
        保存層
        - collectCurrentWork(): 現在表示中の6件を DB スキーマ形式に整形
        - saveWork(): Supabase の works テーブルに insert して id を返す
        - handleSave(): UI の状態管理（loading / success / error）
     ===================================================================== */
 
-    /**
-     * DOM のカード一覧から現在表示中の作品データを収集する
-     * - topics: テキスト情報のみの配列（DB の topics カラムに対応）
-     * - images: { topicId: DataURL | null }（DB の images カラムに対応）
-     */
-    function collectCurrentWork() {
-      const cards  = [...document.querySelectorAll('.card')];
-      const topics = cards.map(card => {
-        const t = TOPICS.find(tp => tp.id === card.dataset.id);
-        return { id: t.id, text: t.text, category: t.category };
-      });
-      const images = Object.fromEntries(
-        topics.map(t => [t.id, TOPICS.find(tp => tp.id === t.id)?.image ?? null])
-      );
-      return { topics, images };
-    }
-
-    /**
-     * works テーブルに insert して生成された id を返す
-     * 将来: images 内の DataURL を Storage にアップロードしてから URL に差し替える
-     * @returns {Promise<string>} 保存された作品の id
-     */
-    async function saveWork() {
-      if (!supabaseClient) {
-        throw new Error('Supabase未設定：SUPABASE_URL と SUPABASE_ANON_KEY を入力してください');
+      /**
+       * DOM のカード一覧から現在表示中の作品データを収集する
+       * - topics: テキスト情報のみの配列（DB の topics カラムに対応）
+       * - images: { topicId: DataURL | null }（DB の images カラムに対応）
+       */
+      function collectCurrentWork() {
+        const cards = [...document.querySelectorAll(".card")];
+        const topics = cards.map((card) => {
+          const t = TOPICS.find((tp) => tp.id === card.dataset.id);
+          return { id: t.id, text: t.text, category: t.category };
+        });
+        const images = Object.fromEntries(topics.map((t) => [t.id, TOPICS.find((tp) => tp.id === t.id)?.image ?? null]));
+        return { topics, images };
       }
 
-      const { topics, images } = collectCurrentWork();
-      const { data, error } = await supabaseClient
-        .from('works')
-        .insert({ title: 'おもろ図鑑', topics, images })
-        .select('id')
-        .single();
+      /**
+       * works テーブルに insert して生成された id を返す
+       * 将来: images 内の DataURL を Storage にアップロードしてから URL に差し替える
+       * @returns {Promise<string>} 保存された作品の id
+       */
+      async function saveWork() {
+        if (!supabaseClient) {
+          throw new Error("Supabase未設定：SUPABASE_URL と SUPABASE_ANON_KEY を入力してください");
+        }
 
-      if (error) throw new Error(error.message);
-      return data.id;
-    }
+        const { topics, images } = collectCurrentWork();
+        const { data, error } = await supabaseClient.from("works").insert({ title: "おもろ図鑑", topics, images }).select("id").single();
 
-    /**
-     * 保存ボタンのUIハンドラ
-     * - 保存成功後、共有URLを「?work=<id>」形式に更新する
-     */
-    async function handleSave() {
-      const btn    = document.getElementById('btnSave');
-      const status = document.getElementById('saveStatus');
-
-      btn.disabled    = true;
-      btn.textContent = '保存中...';
-      status.hidden   = true;
-      status.className = 'save-status';
-
-      try {
-        const savedId  = await saveWork();
-        // 将来: この URL をベースに作品ページ（/works/:id）を作れる
-        const workURL  = `${location.origin}${location.pathname}?work=${savedId}`;
-
-        status.textContent = `保存しました（ID: ${savedId}）`;
-        status.className   = 'save-status save-status--success';
-        status.hidden      = false;
-
-        // 共有バーの URL を保存済み作品URLに更新
-        updateShareBar(workURL);
-
-      } catch (err) {
-        status.textContent = `保存に失敗しました: ${err.message}`;
-        status.className   = 'save-status save-status--error';
-        status.hidden      = false;
-
-      } finally {
-        btn.disabled    = false;
-        btn.textContent = 'この作品を保存する';
+        if (error) throw new Error(error.message);
+        return data.id;
       }
-    }
 
-    /* =====================================================================
+      /**
+       * 保存ボタンのUIハンドラ
+       * - 保存成功後、共有URLを「?work=<id>」形式に更新する
+       */
+      async function handleSave() {
+        const btn = document.getElementById("btnSave");
+        const status = document.getElementById("saveStatus");
+
+        btn.disabled = true;
+        btn.textContent = "保存中...";
+        status.hidden = true;
+        status.className = "save-status";
+
+        try {
+          const savedId = await saveWork();
+          console.log("[おもろ図鑑] 保存成功 id:", savedId);
+
+          status.textContent = `保存成功！ ID: ${savedId}`;
+          status.className = "save-status save-status--success";
+          status.hidden = false;
+        } catch (err) {
+          console.error("[おもろ図鑑] 保存失敗:", err);
+          status.textContent = `保存に失敗しました: ${err.message}`;
+          status.className = "save-status save-status--error";
+          status.hidden = false;
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "この作品を保存する";
+        }
+      }
+
+      /* =====================================================================
        ロジック層
     ===================================================================== */
 
-    /** 配列からn件をランダムに重複なし抽出 */
-    function pickRandom(arr, n) {
-      const shuffled = [...arr].sort(() => Math.random() - 0.5);
-      return shuffled.slice(0, n);
-    }
+      /** 配列からn件をランダムに重複なし抽出 */
+      function pickRandom(arr, n) {
+        const shuffled = [...arr].sort(() => Math.random() - 0.5);
+        return shuffled.slice(0, n);
+      }
 
-    /* =====================================================================
+      /* =====================================================================
        データアクセス層
        - Supabase移行時はこの関数だけ書き換える
        - 現在はローカルの TOPICS 配列から取得（オブジェクト参照を返す）
        - 将来: const { data } = await supabase.from('topics').select('*').eq('category', category)
     ===================================================================== */
-    async function fetchTopics(category) {
-      const pool = category
-        ? TOPICS.filter(t => t.category === category)
-        : TOPICS;
-      return pickRandom(pool, 6);
-    }
+      async function fetchTopics(category) {
+        const pool = category ? TOPICS.filter((t) => t.category === category) : TOPICS;
+        return pickRandom(pool, 6);
+      }
 
-    /* =====================================================================
+      /* =====================================================================
        画像アップロード層
        - Supabase移行時: DataURL → Storage にアップロードして URL を返す関数に差し替え
     ===================================================================== */
 
-    /**
-     * File を読み込み DataURL を返す
-     * @param {File} file
-     * @returns {Promise<string>}
-     */
-    function readFileAsDataURL(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload  = (e) => resolve(e.target.result);
-        reader.onerror = () => reject(new Error('FileReader failed'));
-        reader.readAsDataURL(file);
-      });
-    }
+      /**
+       * File を読み込み DataURL を返す
+       * @param {File} file
+       * @returns {Promise<string>}
+       */
+      function readFileAsDataURL(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.onerror = () => reject(new Error("FileReader failed"));
+          reader.readAsDataURL(file);
+        });
+      }
 
-    /**
-     * 画像をTOPICSに保存してカードのメディアエリアだけ更新する
-     * @param {string} id  - topic.id
-     * @param {File}   file
-     */
-    async function handleImageUpload(id, file) {
-      if (!file) return;
+      /**
+       * 画像をTOPICSに保存してカードのメディアエリアだけ更新する
+       * @param {string} id  - topic.id
+       * @param {File}   file
+       */
+      async function handleImageUpload(id, file) {
+        if (!file) return;
 
-      const dataURL = await readFileAsDataURL(file);
+        const dataURL = await readFileAsDataURL(file);
 
-      // TOPICSオブジェクトに直接書き込む（stateとデータを統合）
-      const topic = TOPICS.find(t => t.id === id);
-      if (!topic) return;
-      topic.image = dataURL;
+        // TOPICSオブジェクトに直接書き込む（stateとデータを統合）
+        const topic = TOPICS.find((t) => t.id === id);
+        if (!topic) return;
+        topic.image = dataURL;
 
-      // カード単体のメディアエリアだけ差し替え（全再描画しない）
-      updateCardMedia(id);
-    }
+        // カード単体のメディアエリアだけ差し替え（全再描画しない）
+        updateCardMedia(id);
+      }
 
-    /* =====================================================================
+      /* =====================================================================
        UI層
     ===================================================================== */
 
-    /** カテゴリキーからラベルを引く */
-    function getCategoryLabel(key) {
-      return CATEGORIES.find(c => c.key === key)?.label ?? key;
-    }
+      /** カテゴリキーからラベルを引く */
+      function getCategoryLabel(key) {
+        return CATEGORIES.find((c) => c.key === key)?.label ?? key;
+      }
 
-    /**
-     * カードのメディアエリアHTMLを生成
-     * - image なし → プレースホルダー兼アップロードラベル
-     * - image あり → <img> + 「変更」ラベル
-     */
-    function createMediaHTML(topic) {
-      const inputHTML = `<input type="file" accept="image/*" class="card__file-input" hidden>`;
+      /**
+       * カードのメディアエリアHTMLを生成
+       * - image なし → プレースホルダー兼アップロードラベル
+       * - image あり → <img> + 「変更」ラベル
+       */
+      function createMediaHTML(topic) {
+        const inputHTML = `<input type="file" accept="image/*" class="card__file-input" hidden>`;
 
-      if (topic.image) {
-        return `
+        if (topic.image) {
+          return `
           <div class="card__media">
             <img class="card__image" src="${topic.image}" alt="${topic.text}">
             <label class="card__replace-label">
@@ -587,9 +628,9 @@
             </label>
           </div>
         `;
-      }
+        }
 
-      return `
+        return `
         <div class="card__media">
           <label class="card__upload-label">
             <span class="card__upload-label__icon">＋</span>
@@ -598,14 +639,14 @@
           </label>
         </div>
       `;
-    }
+      }
 
-    /**
-     * カード1枚のHTMLを生成
-     * - data-id でTOPICSと紐付け、画像保存・再描画に使う
-     */
-    function createCardHTML(topic) {
-      return `
+      /**
+       * カード1枚のHTMLを生成
+       * - data-id でTOPICSと紐付け、画像保存・再描画に使う
+       */
+      function createCardHTML(topic) {
+        return `
         <article class="card" data-id="${topic.id}" data-category="${topic.category}">
           ${createMediaHTML(topic)}
           <span class="card__category card__category--${topic.category}">
@@ -614,143 +655,136 @@
           <p class="card__text">${topic.text}</p>
         </article>
       `;
-    }
+      }
 
-    /**
-     * 指定IDのカードのメディアエリアだけを再描画する
-     * 他カードの状態（アップロード済み画像など）は一切触らない
-     */
-    function updateCardMedia(id) {
-      const card = document.querySelector(`.card[data-id="${id}"]`);
-      if (!card) return;
-      const topic = TOPICS.find(t => t.id === id);
-      const oldMedia = card.querySelector('.card__media');
+      /**
+       * 指定IDのカードのメディアエリアだけを再描画する
+       * 他カードの状態（アップロード済み画像など）は一切触らない
+       */
+      function updateCardMedia(id) {
+        const card = document.querySelector(`.card[data-id="${id}"]`);
+        if (!card) return;
+        const topic = TOPICS.find((t) => t.id === id);
+        const oldMedia = card.querySelector(".card__media");
 
-      const tmp = document.createElement('div');
-      tmp.innerHTML = createMediaHTML(topic);
-      oldMedia.replaceWith(tmp.firstElementChild);
-    }
+        const tmp = document.createElement("div");
+        tmp.innerHTML = createMediaHTML(topic);
+        oldMedia.replaceWith(tmp.firstElementChild);
+      }
 
-    /* =====================================================================
+      /* =====================================================================
        SNS共有層
        - buildXShareURL / buildLINEShareURL は pageURL を引数で受け取る設計
        - Supabase移行後は renderCards 内の location.href を保存済みURLに差し替えるだけ
     ===================================================================== */
 
-    /**
-     * 現在DOMに表示中のお題テキストを収集してX投稿用文字列を生成する
-     * （DOMから取得することで表示と共有テキストを常に一致させる）
-     */
-    function buildShareText() {
-      const lines = [...document.querySelectorAll('.card__text')]
-        .map(el => `・${el.textContent.trim()}`);
-      return `【おもろ図鑑】\n${lines.join('\n')}\n#おもろ図鑑`;
-    }
+      /**
+       * 現在DOMに表示中のお題テキストを収集してX投稿用文字列を生成する
+       * （DOMから取得することで表示と共有テキストを常に一致させる）
+       */
+      function buildShareText() {
+        const lines = [...document.querySelectorAll(".card__text")].map((el) => `・${el.textContent.trim()}`);
+        return `【おもろ図鑑】\n${lines.join("\n")}\n#おもろ図鑑`;
+      }
 
-    /** X（Twitter）共有URLを生成 */
-    function buildXShareURL(pageURL) {
-      const text = buildShareText();
-      return (
-        'https://twitter.com/intent/tweet' +
-        `?text=${encodeURIComponent(text)}` +
-        `&url=${encodeURIComponent(pageURL)}`
-      );
-    }
+      /** X（Twitter）共有URLを生成 */
+      function buildXShareURL(pageURL) {
+        const text = buildShareText();
+        return "https://twitter.com/intent/tweet" + `?text=${encodeURIComponent(text)}` + `&url=${encodeURIComponent(pageURL)}`;
+      }
 
-    /** LINE共有URLを生成 */
-    function buildLINEShareURL(pageURL) {
-      return (
-        'https://social-plugins.line.me/lineit/share' +
-        `?url=${encodeURIComponent(pageURL)}`
-      );
-    }
+      /** LINE共有URLを生成 */
+      function buildLINEShareURL(pageURL) {
+        return "https://social-plugins.line.me/lineit/share" + `?url=${encodeURIComponent(pageURL)}`;
+      }
 
-    /**
-     * 保存セクションの表示切替
-     * 新しいカード生成のたびにステータス表示をリセットする
-     */
-    function updateSaveSection() {
-      const section  = document.getElementById('saveSection');
-      const hasCards = document.querySelectorAll('.card').length > 0;
-      section.hidden = !hasCards;
+      /**
+       * 保存セクションの表示切替
+       * 新しいカード生成のたびにステータス表示をリセットする
+       */
+      function updateSaveSection() {
+        const section = document.getElementById("saveSection");
+        const hasCards = document.querySelectorAll(".card").length > 0;
+        section.hidden = !hasCards;
 
-      // 新規生成時は前回の保存結果をリセット
-      const status = document.getElementById('saveStatus');
-      status.hidden    = true;
-      status.textContent = '';
-      status.className   = 'save-status';
-      const btn = document.getElementById('btnSave');
-      btn.disabled    = false;
-      btn.textContent = 'この作品を保存する';
-    }
+        // 新規生成時は前回の保存結果をリセット
+        const status = document.getElementById("saveStatus");
+        status.hidden = true;
+        status.textContent = "";
+        status.className = "save-status";
+        const btn = document.getElementById("btnSave");
+        btn.disabled = false;
+        btn.textContent = "この作品を保存する";
+      }
 
-    /**
-     * 共有バーの表示切替とhrefを更新する
-     * @param {string} [pageURL] 省略時は location.href。保存後は workURL を渡す
-     */
-    function updateShareBar(pageURL = location.href) {
-      const shareBar = document.getElementById('shareBar');
-      const hasCards = document.querySelectorAll('.card').length > 0;
-      shareBar.hidden = !hasCards;
-      if (!hasCards) return;
+      /**
+       * 共有バーの表示切替とhrefを更新する
+       * @param {string} [pageURL] 省略時は location.href。保存後は workURL を渡す
+       */
+      function updateShareBar(pageURL = location.href) {
+        const shareBar = document.getElementById("shareBar");
+        const hasCards = document.querySelectorAll(".card").length > 0;
+        shareBar.hidden = !hasCards;
+        if (!hasCards) return;
 
-      document.getElementById('btnShareX').href    = buildXShareURL(pageURL);
-      document.getElementById('btnShareLine').href = buildLINEShareURL(pageURL);
-    }
+        document.getElementById("btnShareX").href = buildXShareURL(pageURL);
+        document.getElementById("btnShareLine").href = buildLINEShareURL(pageURL);
+      }
 
-    /** カードグリッドを指定カテゴリのお題6件で更新 */
-    async function renderCards(category) {
-      const grid  = document.getElementById('cardGrid');
-      const picks = await fetchTopics(category);
-      grid.innerHTML = picks.map(createCardHTML).join('');
-      updateSaveSection();
-      updateShareBar();  // 新規生成時は location.href でリセット
-    }
+      /** カードグリッドを指定カテゴリのお題6件で更新 */
+      async function renderCards(category) {
+        const grid = document.getElementById("cardGrid");
+        const picks = await fetchTopics(category);
+        grid.innerHTML = picks.map(createCardHTML).join("");
+        updateSaveSection();
+        updateShareBar(); // 新規生成時は location.href でリセット
+      }
 
-    /** フィルターバーをCATEGORIES配列から生成 */
-    function initFilterBar() {
-      const bar = document.getElementById('filterBar');
-      bar.innerHTML = CATEGORIES.map((cat, i) => `
+      /** フィルターバーをCATEGORIES配列から生成 */
+      function initFilterBar() {
+        const bar = document.getElementById("filterBar");
+        bar.innerHTML = CATEGORIES.map(
+          (cat, i) => `
         <button
-          class="filter-btn${i === 0 ? ' is-active' : ''}"
-          data-category="${cat.key ?? ''}"
+          class="filter-btn${i === 0 ? " is-active" : ""}"
+          data-category="${cat.key ?? ""}"
         >${cat.label}</button>
-      `).join('');
-    }
+      `,
+        ).join("");
+      }
 
-    /* =====================================================================
+      /* =====================================================================
        イベント登録
     ===================================================================== */
 
-    /* カテゴリフィルター（filterBar へ委譲） */
-    document.getElementById('filterBar').addEventListener('click', (e) => {
-      const btn = e.target.closest('.filter-btn');
-      if (!btn) return;
+      /* カテゴリフィルター（filterBar へ委譲） */
+      document.getElementById("filterBar").addEventListener("click", (e) => {
+        const btn = e.target.closest(".filter-btn");
+        if (!btn) return;
 
-      document.querySelectorAll('.filter-btn')
-        .forEach(b => b.classList.remove('is-active'));
-      btn.classList.add('is-active');
+        document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
 
-      const category = btn.dataset.category || null;
-      renderCards(category);
-    });
+        const category = btn.dataset.category || null;
+        renderCards(category);
+      });
 
-    /* 画像ファイル選択（cardGrid へ委譲） */
-    document.getElementById('cardGrid').addEventListener('change', (e) => {
-      if (!e.target.matches('.card__file-input')) return;
+      /* 画像ファイル選択（cardGrid へ委譲） */
+      document.getElementById("cardGrid").addEventListener("change", (e) => {
+        if (!e.target.matches(".card__file-input")) return;
 
-      const card = e.target.closest('.card');
-      const id   = card?.dataset.id;
-      if (!id) return;
+        const card = e.target.closest(".card");
+        const id = card?.dataset.id;
+        if (!id) return;
 
-      handleImageUpload(id, e.target.files[0]);
-    });
+        handleImageUpload(id, e.target.files[0]);
+      });
 
-    /* 保存ボタン */
-    document.getElementById('btnSave').addEventListener('click', handleSave);
+      /* 保存ボタン */
+      document.getElementById("btnSave").addEventListener("click", handleSave);
 
-    /* 起動時 */
-    initFilterBar();
-  </script>
-</body>
+      /* 起動時 */
+      initFilterBar();
+    </script>
+  </body>
 </html>
