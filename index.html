@@ -52,6 +52,11 @@
         align-items: center;
         padding: 32px 16px 48px;
       }
+      @media (min-width: 768px) {
+        body {
+          padding: 48px 40px 80px;
+        }
+      }
 
       /* =====================
        Header
@@ -119,14 +124,23 @@
     ===================== */
       #cardGrid {
         width: 100%;
-        max-width: 720px;
+        max-width: 1000px;
+        margin: 0 auto;
         overflow: hidden; /* Swiper required */
       }
 
-      /* 1枚を中央に、左右に次のカードが少し見える幅 */
+      /* モバイル: ビューポート幅に対する比率で横にはみ出す余地を作る */
       .swiper-slide {
         width: 78%;
         max-width: 300px;
+      }
+
+      /* PC: カード幅を固定して中央カード＋左右見切れが安定して見える */
+      @media (min-width: 768px) {
+        .swiper-slide {
+          width: 280px;
+          max-width: none;
+        }
       }
 
       /* =====================
@@ -547,11 +561,7 @@
         if (!supabaseClient) {
           throw new Error("Supabase未設定：SUPABASE_URL と SUPABASE_ANON_KEY を入力してください");
         }
-        const { data, error } = await supabaseClient
-          .from("works")
-          .select("id, title, topics, images")
-          .eq("id", workId)
-          .single();
+        const { data, error } = await supabaseClient.from("works").select("id, title, topics, images").eq("id", workId).single();
 
         if (error) throw new Error(error.message);
         return data;
@@ -608,7 +618,9 @@
 
       function destroySwiper() {
         if (!swiperInstance) return;
-        try { swiperInstance.destroy(true, true); } catch (_) {}
+        try {
+          swiperInstance.destroy(true, true);
+        } catch (_) {}
         swiperInstance = null;
       }
 
@@ -622,15 +634,15 @@
       }
 
       function initSwiper() {
-        swiperInstance = new Swiper('#cardGrid', {
-          slidesPerView: 'auto',
+        swiperInstance = new Swiper("#cardGrid", {
+          slidesPerView: "auto",
           centeredSlides: true,
           spaceBetween: 16,
           grabCursor: true,
           loop: true,
           navigation: {
-            nextEl: '.swiper-button-next',
-            prevEl: '.swiper-button-prev',
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
           },
         });
       }
@@ -836,7 +848,7 @@
           const master = TOPICS.find((tp) => tp.id === t.id);
           if (master) {
             master.image = t.image;
-            master.name  = t.name ?? null;
+            master.name = t.name ?? null;
           }
         });
 
@@ -943,7 +955,9 @@
 
       /* 起動時 */
       initFilterBar();
-      loadFromURL().then((restored) => { if (!restored) renderCards(null); });
+      loadFromURL().then((restored) => {
+        if (!restored) renderCards(null);
+      });
     </script>
   </body>
 </html>
