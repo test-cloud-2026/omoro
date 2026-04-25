@@ -371,21 +371,24 @@
     ===================== */
       .card__name-input {
         width: 100%;
-        padding: 7px 10px;
-        border: 1.5px solid var(--border);
-        border-radius: 8px;
-        font-size: 0.8rem;
+        padding: 4px 2px;
+        border: none;
+        border-bottom: 1.5px solid var(--border);
+        border-radius: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
         font-family: inherit;
         color: var(--text-primary);
-        background: var(--bg);
+        background: transparent;
         outline: none;
         transition: border-color 0.15s;
       }
       .card__name-input::placeholder {
         color: var(--text-secondary);
+        font-weight: 400;
       }
       .card__name-input:focus {
-        border-color: var(--text-secondary);
+        border-bottom-color: var(--text-primary);
       }
 
       /* =====================
@@ -690,16 +693,16 @@
         return `
         <article class="card" data-id="${topic.id}" data-category="${topic.category}">
           ${createMediaHTML(topic)}
-          <span class="card__category card__category--${topic.category}">
-            ${getCategoryLabel(topic.category)}
-          </span>
-          <p class="card__text">${topic.text}</p>
           <input
             type="text"
             class="card__name-input"
             placeholder="名前をつける"
             value="${topic.name ?? ""}"
           >
+          <span class="card__category card__category--${topic.category}">
+            ${getCategoryLabel(topic.category)}
+          </span>
+          <p class="card__text">${topic.text}</p>
         </article>
       `;
       }
