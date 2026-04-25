@@ -62,26 +62,39 @@
     }
 
     /* =====================
-       Generate button
+       Filter bar
     ===================== */
-    .btn-generate {
-      display: block;
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
       width: 100%;
-      max-width: 360px;
-      margin: 0 auto 32px;
-      padding: 16px 24px;
+      max-width: 720px;
+      margin-bottom: 28px;
+    }
+
+    .filter-btn {
+      padding: 10px 20px;
+      border: 1.5px solid var(--border);
+      border-radius: 99px;
+      background: var(--surface);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
+    }
+    .filter-btn:hover { border-color: var(--text-secondary); }
+    .filter-btn:active { transform: scale(0.96); }
+
+    /* アクティブ状態 */
+    .filter-btn.is-active {
       background: var(--btn-bg);
       color: var(--btn-text);
-      border: none;
-      border-radius: var(--radius);
-      font-size: 1rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
+      border-color: var(--btn-bg);
     }
-    .btn-generate:hover { background: var(--btn-hover); }
-    .btn-generate:active { transform: scale(0.97); }
 
     /* =====================
        Card grid
@@ -173,11 +186,11 @@
   <!-- ヘッダー -->
   <header class="header">
     <h1 class="header__title">おもろ図鑑</h1>
-    <p class="header__subtitle">抽象的なお題をランダムに6つ生成します</p>
+    <p class="header__subtitle">カテゴリを選んでお題を6つ生成します</p>
   </header>
 
-  <!-- 生成ボタン -->
-  <button class="btn-generate" id="btnGenerate">お題を生成する</button>
+  <!-- フィルターバー（JS で生成） -->
+  <nav class="filter-bar" id="filterBar" aria-label="カテゴリ選択"></nav>
 
   <!-- カード一覧 -->
   <main class="card-grid" id="cardGrid" aria-live="polite">
@@ -230,35 +243,53 @@
       { id: 'r07', text: '偶然が重なりすぎる出会いと、その意味',              category: 'romance' },
     ];
 
-    /* カテゴリの表示ラベル */
-    const CATEGORY_LABELS = {
-      horror:  'ホラー',
-      daily:   '日常',
-      sf:      'SF',
-      romance: '乙女',
-    };
+    /* =====================================================================
+       カテゴリ定義
+       - ボタン生成・フィルタリング・ラベル表示の単一ソース
+       - key: null = 全カテゴリ（ランダム）
+    ===================================================================== */
+    const CATEGORIES = [
+      { key: null,      label: 'ランダム' },
+      { key: 'horror',  label: 'ホラー' },
+      { key: 'daily',   label: '日常' },
+      { key: 'sf',      label: 'SF' },
+      { key: 'romance', label: '乙女' },
+    ];
 
     /* =====================================================================
        ロジック層
     ===================================================================== */
 
-    /**
-     * 配列からn件をランダムに重複なし抽出する
-     * @param {Array} arr
-     * @param {number} n
-     * @returns {Array}
-     */
+    /** 配列からn件をランダムに重複なし抽出 */
     function pickRandom(arr, n) {
       const shuffled = [...arr].sort(() => Math.random() - 0.5);
       return shuffled.slice(0, n);
     }
 
     /* =====================================================================
+       データアクセス層
+       - Supabase移行時はこの関数だけ書き換える
+       - 現在はローカルの TOPICS 配列から取得
+       - 将来: const { data } = await supabase.from('topics').select('*').eq('category', category)
+    ===================================================================== */
+    async function fetchTopics(category) {
+      const pool = category
+        ? TOPICS.filter(t => t.category === category)
+        : TOPICS;
+      return pickRandom(pool, 6);
+    }
+
+    /* =====================================================================
        UI層
     ===================================================================== */
 
+    /** カテゴリラベルを key から引く */
+    function getCategoryLabel(key) {
+      return CATEGORIES.find(c => c.key === key)?.label ?? key;
+    }
+
     /**
-     * カード1枚のHTMLを生成する
+     * カード1枚のHTMLを生成
      * 将来の拡張ポイント: card__image-placeholder を表示に切り替えるだけで画像対応
      */
     function createCardHTML(topic) {
@@ -266,26 +297,52 @@
         <article class="card" data-id="${topic.id}" data-category="${topic.category}">
           <div class="card__image-placeholder"></div>
           <span class="card__category card__category--${topic.category}">
-            ${CATEGORY_LABELS[topic.category]}
+            ${getCategoryLabel(topic.category)}
           </span>
           <p class="card__text">${topic.text}</p>
         </article>
       `;
     }
 
-    /** カードグリッドを6件のお題で更新する */
-    function renderCards() {
+    /** カードグリッドを指定カテゴリのお題6件で更新 */
+    async function renderCards(category) {
       const grid  = document.getElementById('cardGrid');
-      const picks = pickRandom(TOPICS, 6);
-
+      const picks = await fetchTopics(category);
       // アニメーションを毎回リセットするため innerHTML を差し替え
       grid.innerHTML = picks.map(createCardHTML).join('');
     }
 
+    /** フィルターバーをCATEGORIES配列から生成 */
+    function initFilterBar() {
+      const bar = document.getElementById('filterBar');
+      bar.innerHTML = CATEGORIES.map((cat, i) => `
+        <button
+          class="filter-btn${i === 0 ? ' is-active' : ''}"
+          data-category="${cat.key ?? ''}"
+        >${cat.label}</button>
+      `).join('');
+    }
+
     /* =====================================================================
        イベント登録
+       - filterBar に委譲することでボタンごとのリスナー重複をなくす
     ===================================================================== */
-    document.getElementById('btnGenerate').addEventListener('click', renderCards);
+    document.getElementById('filterBar').addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+
+      // アクティブ状態を付け替え
+      document.querySelectorAll('.filter-btn')
+        .forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+
+      // '' → null に変換して renderCards へ渡す
+      const category = btn.dataset.category || null;
+      renderCards(category);
+    });
+
+    // 起動時にフィルターバーを描画
+    initFilterBar();
   </script>
 </body>
 </html>
