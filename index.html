@@ -6,6 +6,9 @@
     <title>おもろ図鑑</title>
     <!-- Supabase JS クライアント（UMD） -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <!-- Swiper -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <style>
       /* =====================
        Design tokens
@@ -112,20 +115,18 @@
       }
 
       /* =====================
-       Card grid
-       2col on mobile → 3col on wider screens
+       Swiper container / slide
     ===================== */
-      .card-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--gap);
+      #cardGrid {
         width: 100%;
         max-width: 720px;
+        overflow: hidden; /* Swiper required */
       }
-      @media (min-width: 600px) {
-        .card-grid {
-          grid-template-columns: repeat(3, 1fr);
-        }
+
+      /* 1枚を中央に、左右に次のカードが少し見える幅 */
+      .swiper-slide {
+        width: 78%;
+        max-width: 300px;
       }
 
       /* =====================
@@ -413,10 +414,10 @@
     <!-- フィルターバー（JS で生成） -->
     <nav class="filter-bar" id="filterBar" aria-label="カテゴリ選択"></nav>
 
-    <!-- カード一覧 -->
-    <main class="card-grid" id="cardGrid" aria-live="polite">
+    <!-- カード一覧（Swiperコンテナ） -->
+    <div class="swiper" id="cardGrid" aria-live="polite">
       <p class="empty-state">ボタンを押すと<br />6つのお題が表示されます</p>
-    </main>
+    </div>
 
     <!-- 保存セクション（カード表示後のみ表示） -->
     <div class="save-section" id="saveSection" hidden>
@@ -598,6 +599,29 @@
       }
 
       /* =====================================================================
+       Swiper層
+       - innerHTML 更新前に destroySwiper() で古いインスタンスをクリーンアップ
+       - innerHTML 更新後に initSwiper() で新しいインスタンスを作成
+    ===================================================================== */
+
+      let swiperInstance = null;
+
+      function destroySwiper() {
+        if (!swiperInstance) return;
+        try { swiperInstance.destroy(true, true); } catch (_) {}
+        swiperInstance = null;
+      }
+
+      function initSwiper() {
+        swiperInstance = new Swiper('#cardGrid', {
+          slidesPerView: 'auto',
+          centeredSlides: true,
+          spaceBetween: 16,
+          grabCursor: true,
+        });
+      }
+
+      /* =====================================================================
        データアクセス層
        - Supabase移行時はこの関数だけ書き換える
        - 現在はローカルの TOPICS 配列から取得（オブジェクト参照を返す）
@@ -691,19 +715,21 @@
        */
       function createCardHTML(topic) {
         return `
-        <article class="card" data-id="${topic.id}" data-category="${topic.category}">
-          ${createMediaHTML(topic)}
-          <input
-            type="text"
-            class="card__name-input"
-            placeholder="名前をつける"
-            value="${topic.name ?? ""}"
-          >
-          <span class="card__category card__category--${topic.category}">
-            ${getCategoryLabel(topic.category)}
-          </span>
-          <p class="card__text">${topic.text}</p>
-        </article>
+        <div class="swiper-slide">
+          <article class="card" data-id="${topic.id}" data-category="${topic.category}">
+            ${createMediaHTML(topic)}
+            <input
+              type="text"
+              class="card__name-input"
+              placeholder="名前をつける"
+              value="${topic.name ?? ""}"
+            >
+            <span class="card__category card__category--${topic.category}">
+              ${getCategoryLabel(topic.category)}
+            </span>
+            <p class="card__text">${topic.text}</p>
+          </article>
+        </div>
       `;
       }
 
@@ -802,7 +828,9 @@
         });
 
         const grid = document.getElementById("cardGrid");
-        grid.innerHTML = topicsWithImages.map(createCardHTML).join("");
+        destroySwiper();
+        grid.innerHTML = `<div class="swiper-wrapper">${topicsWithImages.map(createCardHTML).join("")}</div>`;
+        initSwiper();
         updateSaveSection();
         updateShareBar(location.href);
       }
@@ -818,6 +846,7 @@
         if (!workId) return false;
 
         const grid = document.getElementById("cardGrid");
+        destroySwiper();
         grid.innerHTML = '<p class="empty-state">読み込み中...</p>';
 
         try {
@@ -836,9 +865,11 @@
       async function renderCards(category) {
         const grid = document.getElementById("cardGrid");
         const picks = await fetchTopics(category);
-        grid.innerHTML = picks.map(createCardHTML).join("");
+        destroySwiper();
+        grid.innerHTML = `<div class="swiper-wrapper">${picks.map(createCardHTML).join("")}</div>`;
+        initSwiper();
         updateSaveSection();
-        updateShareBar(); // 新規生成時は location.href でリセット
+        updateShareBar();
       }
 
       /** フィルターバーをCATEGORIES配列から生成 */
