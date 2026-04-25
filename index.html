@@ -367,6 +367,28 @@
       }
 
       /* =====================
+       Card name input
+    ===================== */
+      .card__name-input {
+        width: 100%;
+        padding: 7px 10px;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-family: inherit;
+        color: var(--text-primary);
+        background: var(--bg);
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      .card__name-input::placeholder {
+        color: var(--text-secondary);
+      }
+      .card__name-input:focus {
+        border-color: var(--text-secondary);
+      }
+
+      /* =====================
        Empty state
     ===================== */
       .empty-state {
@@ -415,39 +437,39 @@
     ===================================================================== */
       const TOPICS = [
         // ── ホラー ──────────────────────────────────
-        { id: "h01", text: "一瞬で心を奪い、視線が離れなくなる存在", category: "horror", image: null },
-        { id: "h02", text: "近づくと理由もなく不安になる気配", category: "horror", image: null },
-        { id: "h03", text: "触れると記憶が少しだけ曖昧になる物体", category: "horror", image: null },
-        { id: "h04", text: "鏡の中だけに映り込む、名前のないもの", category: "horror", image: null },
-        { id: "h05", text: "写真を撮るたびに少しずつ増えている影", category: "horror", image: null },
-        { id: "h06", text: "深夜にだけ届く、送信者不明のメッセージ", category: "horror", image: null },
-        { id: "h07", text: "声に出した瞬間に忘れてしまう言葉", category: "horror", image: null },
+        { id: "h01", text: "一瞬で心を奪い、視線が離れなくなる存在", category: "horror", image: null, name: null },
+        { id: "h02", text: "近づくと理由もなく不安になる気配", category: "horror", image: null, name: null },
+        { id: "h03", text: "触れると記憶が少しだけ曖昧になる物体", category: "horror", image: null, name: null },
+        { id: "h04", text: "鏡の中だけに映り込む、名前のないもの", category: "horror", image: null, name: null },
+        { id: "h05", text: "写真を撮るたびに少しずつ増えている影", category: "horror", image: null, name: null },
+        { id: "h06", text: "深夜にだけ届く、送信者不明のメッセージ", category: "horror", image: null, name: null },
+        { id: "h07", text: "声に出した瞬間に忘れてしまう言葉", category: "horror", image: null, name: null },
 
         // ── 日常 ────────────────────────────────────
-        { id: "d01", text: "誰も座っていないのに、ほんのり温かい椅子", category: "daily", image: null },
-        { id: "d02", text: "毎朝同じ時刻に止まっている、壊れていない時計", category: "daily", image: null },
-        { id: "d03", text: "昨日まで確かにあったはずなのに誰も知らない棚", category: "daily", image: null },
-        { id: "d04", text: "いつの間にか増えている食器", category: "daily", image: null },
-        { id: "d05", text: "夕暮れ時にだけ聞こえる遠くの呼び声", category: "daily", image: null },
-        { id: "d06", text: "開けたはずなのに閉まっているドア", category: "daily", image: null },
-        { id: "d07", text: "なぜか懐かしいのに、思い出せない場所の匂い", category: "daily", image: null },
+        { id: "d01", text: "誰も座っていないのに、ほんのり温かい椅子", category: "daily", image: null, name: null },
+        { id: "d02", text: "毎朝同じ時刻に止まっている、壊れていない時計", category: "daily", image: null, name: null },
+        { id: "d03", text: "昨日まで確かにあったはずなのに誰も知らない棚", category: "daily", image: null, name: null },
+        { id: "d04", text: "いつの間にか増えている食器", category: "daily", image: null, name: null },
+        { id: "d05", text: "夕暮れ時にだけ聞こえる遠くの呼び声", category: "daily", image: null, name: null },
+        { id: "d06", text: "開けたはずなのに閉まっているドア", category: "daily", image: null, name: null },
+        { id: "d07", text: "なぜか懐かしいのに、思い出せない場所の匂い", category: "daily", image: null, name: null },
 
         // ── SF ──────────────────────────────────────
-        { id: "s01", text: "観測するたびに形が微妙に変わる物質", category: "sf", image: null },
-        { id: "s02", text: "重力が逆に働く空間の、目に見えない境界線", category: "sf", image: null },
-        { id: "s03", text: "記録には残っているのに誰も覚えていない出来事", category: "sf", image: null },
-        { id: "s04", text: "時間の流れがほんの少しずれている場所", category: "sf", image: null },
-        { id: "s05", text: "並行世界の自分が残した、読めない手書きのメモ", category: "sf", image: null },
-        { id: "s06", text: "みんなが知っているのに、辞書に載っていない言葉", category: "sf", image: null },
+        { id: "s01", text: "観測するたびに形が微妙に変わる物質", category: "sf", image: null, name: null },
+        { id: "s02", text: "重力が逆に働く空間の、目に見えない境界線", category: "sf", image: null, name: null },
+        { id: "s03", text: "記録には残っているのに誰も覚えていない出来事", category: "sf", image: null, name: null },
+        { id: "s04", text: "時間の流れがほんの少しずれている場所", category: "sf", image: null, name: null },
+        { id: "s05", text: "並行世界の自分が残した、読めない手書きのメモ", category: "sf", image: null, name: null },
+        { id: "s06", text: "みんなが知っているのに、辞書に載っていない言葉", category: "sf", image: null, name: null },
 
         // ── 乙女 ────────────────────────────────────
-        { id: "r01", text: "視線が合うたびに心拍数が上がる、その理由", category: "romance", image: null },
-        { id: "r02", text: "記憶の中にしか残っていない甘い香り", category: "romance", image: null },
-        { id: "r03", text: "名前を呼ばれると体温が少し上がる感覚", category: "romance", image: null },
-        { id: "r04", text: "夢の中でだけ会える人の、見えない横顔", category: "romance", image: null },
-        { id: "r05", text: "無意識に探してしまう、誰かの手の温もり", category: "romance", image: null },
-        { id: "r06", text: "言葉にならないまま消えてしまった気持ち", category: "romance", image: null },
-        { id: "r07", text: "偶然が重なりすぎる出会いと、その意味", category: "romance", image: null },
+        { id: "r01", text: "視線が合うたびに心拍数が上がる、その理由", category: "romance", image: null, name: null },
+        { id: "r02", text: "記憶の中にしか残っていない甘い香り", category: "romance", image: null, name: null },
+        { id: "r03", text: "名前を呼ばれると体温が少し上がる感覚", category: "romance", image: null, name: null },
+        { id: "r04", text: "夢の中でだけ会える人の、見えない横顔", category: "romance", image: null, name: null },
+        { id: "r05", text: "無意識に探してしまう、誰かの手の温もり", category: "romance", image: null, name: null },
+        { id: "r06", text: "言葉にならないまま消えてしまった気持ち", category: "romance", image: null, name: null },
+        { id: "r07", text: "偶然が重なりすぎる出会いと、その意味", category: "romance", image: null, name: null },
       ];
 
       /* =====================================================================
@@ -489,7 +511,7 @@
         const cards = [...document.querySelectorAll(".card")];
         const topics = cards.map((card) => {
           const t = TOPICS.find((tp) => tp.id === card.dataset.id);
-          return { id: t.id, text: t.text, category: t.category };
+          return { id: t.id, text: t.text, category: t.category, name: t.name ?? null };
         });
         const images = Object.fromEntries(topics.map((t) => [t.id, TOPICS.find((tp) => tp.id === t.id)?.image ?? null]));
         return { topics, images };
@@ -672,6 +694,12 @@
             ${getCategoryLabel(topic.category)}
           </span>
           <p class="card__text">${topic.text}</p>
+          <input
+            type="text"
+            class="card__name-input"
+            placeholder="名前をつける"
+            value="${topic.name ?? ""}"
+          >
         </article>
       `;
       }
@@ -761,10 +789,13 @@
           image: work.images?.[t.id] ?? null,
         }));
 
-        // TOPICS本体のimageを更新（画像の変更操作に使われる）
+        // TOPICS本体のimage・nameを更新（以降の操作と整合させる）
         topicsWithImages.forEach((t) => {
           const master = TOPICS.find((tp) => tp.id === t.id);
-          if (master) master.image = t.image;
+          if (master) {
+            master.image = t.image;
+            master.name  = t.name ?? null;
+          }
         });
 
         const grid = document.getElementById("cardGrid");
@@ -845,6 +876,15 @@
         if (!id) return;
 
         handleImageUpload(id, e.target.files[0]);
+      });
+
+      /* 名前入力（cardGrid へ委譲） */
+      document.getElementById("cardGrid").addEventListener("input", (e) => {
+        if (!e.target.matches(".card__name-input")) return;
+        const id = e.target.closest(".card")?.dataset.id;
+        if (!id) return;
+        const topic = TOPICS.find((t) => t.id === id);
+        if (topic) topic.name = e.target.value || null;
       });
 
       /* 保存ボタン */
