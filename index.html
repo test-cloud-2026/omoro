@@ -512,7 +512,7 @@
        * - images: { topicId: DataURL | null }（DB の images カラムに対応）
        */
       function collectCurrentWork() {
-        const cards = [...document.querySelectorAll(".card")];
+        const cards = [...document.querySelectorAll(".swiper-slide:not(.swiper-slide-duplicate) .card")];
         const topics = cards.map((card) => {
           const t = TOPICS.find((tp) => tp.id === card.dataset.id);
           return { id: t.id, text: t.text, category: t.category, name: t.name ?? null };
@@ -612,12 +612,26 @@
         swiperInstance = null;
       }
 
+      /** swiper-wrapper + ナビゲーションボタンを包んだHTMLを生成する */
+      function buildSwiperHTML(slidesHTML) {
+        return `
+          <div class="swiper-wrapper">${slidesHTML}</div>
+          <div class="swiper-button-prev"></div>
+          <div class="swiper-button-next"></div>
+        `;
+      }
+
       function initSwiper() {
         swiperInstance = new Swiper('#cardGrid', {
           slidesPerView: 'auto',
           centeredSlides: true,
           spaceBetween: 16,
           grabCursor: true,
+          loop: true,
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
         });
       }
 
@@ -738,14 +752,13 @@
        * 他カードの状態（アップロード済み画像など）は一切触らない
        */
       function updateCardMedia(id) {
-        const card = document.querySelector(`.card[data-id="${id}"]`);
-        if (!card) return;
         const topic = TOPICS.find((t) => t.id === id);
-        const oldMedia = card.querySelector(".card__media");
-
-        const tmp = document.createElement("div");
-        tmp.innerHTML = createMediaHTML(topic);
-        oldMedia.replaceWith(tmp.firstElementChild);
+        if (!topic) return;
+        document.querySelectorAll(`.card[data-id="${id}"]`).forEach((card) => {
+          const tmp = document.createElement("div");
+          tmp.innerHTML = createMediaHTML(topic);
+          card.querySelector(".card__media").replaceWith(tmp.firstElementChild);
+        });
       }
 
       /* =====================================================================
@@ -759,7 +772,7 @@
        * （DOMから取得することで表示と共有テキストを常に一致させる）
        */
       function buildShareText() {
-        const lines = [...document.querySelectorAll(".card__text")].map((el) => `・${el.textContent.trim()}`);
+        const lines = [...document.querySelectorAll(".swiper-slide:not(.swiper-slide-duplicate) .card__text")].map((el) => `・${el.textContent.trim()}`);
         return `【おもろ図鑑】\n${lines.join("\n")}\n#おもろ図鑑`;
       }
 
@@ -829,7 +842,7 @@
 
         const grid = document.getElementById("cardGrid");
         destroySwiper();
-        grid.innerHTML = `<div class="swiper-wrapper">${topicsWithImages.map(createCardHTML).join("")}</div>`;
+        grid.innerHTML = buildSwiperHTML(topicsWithImages.map(createCardHTML).join(""));
         initSwiper();
         updateSaveSection();
         updateShareBar(location.href);
@@ -866,7 +879,7 @@
         const grid = document.getElementById("cardGrid");
         const picks = await fetchTopics(category);
         destroySwiper();
-        grid.innerHTML = `<div class="swiper-wrapper">${picks.map(createCardHTML).join("")}</div>`;
+        grid.innerHTML = buildSwiperHTML(picks.map(createCardHTML).join(""));
         initSwiper();
         updateSaveSection();
         updateShareBar();
@@ -919,6 +932,10 @@
         if (!id) return;
         const topic = TOPICS.find((t) => t.id === id);
         if (topic) topic.name = e.target.value || null;
+        // Swiper loop クローンにも値を同期する
+        document.querySelectorAll(`.card[data-id="${id}"] .card__name-input`).forEach((input) => {
+          if (input !== e.target) input.value = e.target.value;
+        });
       });
 
       /* 保存ボタン */
@@ -926,7 +943,7 @@
 
       /* 起動時 */
       initFilterBar();
-      loadFromURL(); // ?work=<UUID> があれば自動復元、なければ通常表示
+      loadFromURL().then((restored) => { if (!restored) renderCards(null); });
     </script>
   </body>
 </html>
