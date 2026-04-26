@@ -435,7 +435,10 @@
         letter-spacing: 0.03em;
         cursor: pointer;
         text-align: center;
-        transition: border-color 0.15s, color 0.15s, background 0.15s;
+        transition:
+          border-color 0.15s,
+          color 0.15s,
+          background 0.15s;
       }
       .btn-screenshot:hover {
         border-color: var(--text-primary);
@@ -476,6 +479,12 @@
         display: none !important;
       }
 
+      @media (max-width: 599px) {
+        body.screenshot-mode #cardGrid .swiper-wrapper {
+          grid-template-columns: 1fr;
+        }
+      }
+
       @media (min-width: 600px) {
         body.screenshot-mode #cardGrid .swiper-wrapper {
           grid-template-columns: repeat(3, 1fr);
@@ -500,10 +509,7 @@
 
       body.screenshot-mode #cardGrid {
         background-color: #f5efe4;
-        background-image:
-          radial-gradient(ellipse 80% 55% at 20% 25%, rgba(185, 158, 120, 0.12) 0%, transparent 55%),
-          radial-gradient(ellipse 70% 65% at 80% 75%, rgba(152, 130, 98, 0.08) 0%, transparent 60%),
-          repeating-radial-gradient(circle at 30% 60%, transparent 0px, transparent 1px, rgba(160, 138, 108, 0.025) 1px, rgba(160, 138, 108, 0.025) 2px),
+        background-image: radial-gradient(ellipse 80% 55% at 20% 25%, rgba(185, 158, 120, 0.12) 0%, transparent 55%), radial-gradient(ellipse 70% 65% at 80% 75%, rgba(152, 130, 98, 0.08) 0%, transparent 60%), repeating-radial-gradient(circle at 30% 60%, transparent 0px, transparent 1px, rgba(160, 138, 108, 0.025) 1px, rgba(160, 138, 108, 0.025) 2px),
           repeating-radial-gradient(circle at 70% 30%, transparent 0px, transparent 1px, rgba(140, 120, 90, 0.02) 1px, rgba(140, 120, 90, 0.02) 2px);
         border-radius: 8px;
         border: 1px solid rgba(160, 140, 110, 0.4);
@@ -523,23 +529,8 @@
         border-radius: 8px;
         pointer-events: none;
         mix-blend-mode: multiply;
-        background-image:
-          repeating-linear-gradient(
-            0deg,
-            transparent 0px,
-            transparent 2px,
-            rgba(145, 118, 88, 0.018) 2px,
-            rgba(145, 118, 88, 0.018) 3px
-          ),
-          repeating-linear-gradient(
-            88deg,
-            transparent 0px,
-            transparent 3px,
-            rgba(130, 108, 80, 0.012) 3px,
-            rgba(130, 108, 80, 0.012) 4px
-          ),
-          radial-gradient(ellipse 55% 40% at 22% 30%, rgba(168, 142, 108, 0.07) 0%, transparent 70%),
-          radial-gradient(ellipse 45% 55% at 78% 68%, rgba(152, 128, 94, 0.05) 0%, transparent 65%);
+        background-image: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(145, 118, 88, 0.018) 2px, rgba(145, 118, 88, 0.018) 3px), repeating-linear-gradient(88deg, transparent 0px, transparent 3px, rgba(130, 108, 80, 0.012) 3px, rgba(130, 108, 80, 0.012) 4px),
+          radial-gradient(ellipse 55% 40% at 22% 30%, rgba(168, 142, 108, 0.07) 0%, transparent 70%), radial-gradient(ellipse 45% 55% at 78% 68%, rgba(152, 128, 94, 0.05) 0%, transparent 65%);
       }
 
       body.screenshot-mode #cardGrid .swiper-wrapper {
@@ -567,6 +558,9 @@
         background: rgba(255, 253, 247, 0.85);
         border-color: rgba(168, 148, 118, 0.38);
         border-radius: 5px;
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, 0.12),
+          inset 0 0 4px rgba(120, 100, 80, 0.05);
       }
 
       body.screenshot-mode .card__text {
