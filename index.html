@@ -568,15 +568,20 @@
         counter-reset: card-no;
       }
 
-      /* No.XX ナンバリング — ::before を最初の flex アイテムとして配置 */
-      body.screenshot-mode .card::before {
+      /* No.XX ナンバリング — 画像左上にオーバーレイ */
+      body.screenshot-mode .card__media::before {
         counter-increment: card-no;
         content: "No.0" counter(card-no);
-        order: -2;
-        align-self: flex-start;
-        font-size: 0.62rem;
+        position: absolute;
+        top: 8px;
+        left: 10px;
+        z-index: 1;
+        font-size: 0.6rem;
         letter-spacing: 0.1em;
-        color: rgba(80, 65, 45, 0.5);
+        color: #fff;
+        background: rgba(0, 0, 0, 0.32);
+        padding: 2px 7px;
+        border-radius: 4px;
       }
 
       /* カテゴリラベルを画像の直前（order: -1）に移動 */
