@@ -133,66 +133,13 @@
       .swiper-slide {
         width: 78%;
         max-width: 300px;
-        display: flex;
-        flex-direction: column;
       }
 
-      /* PC: 見開きレイアウト */
+      /* PC: カード幅を固定して中央カード＋左右見切れが安定して見える */
       @media (min-width: 768px) {
-        /* Swiper が slidesPerView:2 で幅を自動計算するため max-width のみ解除 */
-        /* めくり感トランジションも PC のみに適用 */
         .swiper-slide {
+          width: 280px;
           max-width: none;
-          transition:
-            transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-            opacity 0.3s ease;
-          opacity: 0.82;
-          transform: scale(0.985);
-        }
-
-        /* アクティブな見開き2枚（左ページ＋右ページ）は通常表示 */
-        .swiper-slide-active,
-        .swiper-slide-next {
-          opacity: 1;
-          transform: scale(1);
-        }
-
-        /* 見開きのくぼみ（綴じ目）: radial-gradient で影を表現 */
-        #cardGrid {
-          position: relative;
-        }
-        #cardGrid::before {
-          content: "";
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
-          top: 0;
-          bottom: 0;
-          width: 60px;
-          background: radial-gradient(
-            ellipse 100% 55% at 50% 50%,
-            rgba(0, 0, 0, 0.15) 0%,
-            rgba(0, 0, 0, 0.07) 40%,
-            transparent 68%
-          );
-          z-index: 5;
-          pointer-events: none;
-        }
-
-        /* 左ページ（奇数スライド）: 外側＋内側（綴じ目側）に影で紙の厚みを表現 */
-        .swiper-slide:nth-child(odd) .card {
-          border-radius: var(--radius) 2px 2px var(--radius);
-          box-shadow:
-            -5px 0 16px rgba(0, 0, 0, 0.08),
-            inset -12px 0 24px rgba(0, 0, 0, 0.05);
-        }
-
-        /* 右ページ（偶数スライド）: 外側＋内側（綴じ目側）に影で紙の厚みを表現 */
-        .swiper-slide:nth-child(even) .card {
-          border-radius: 2px var(--radius) var(--radius) 2px;
-          box-shadow:
-            5px 0 16px rgba(0, 0, 0, 0.08),
-            inset 12px 0 24px rgba(0, 0, 0, 0.05);
         }
       }
 
@@ -207,7 +154,6 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
-        height: 100%;
         animation: fadeIn 0.3s ease both;
       }
       @keyframes fadeIn {
@@ -338,11 +284,6 @@
         font-size: clamp(0.8rem, 2.5vw, 0.95rem);
         line-height: 1.65;
         flex: 1;
-        display: -webkit-box;
-        -webkit-line-clamp: 4;
-        -webkit-box-orient: vertical;
-        line-clamp: 4;
-        overflow: hidden;
       }
 
       /* =====================
@@ -643,9 +584,11 @@
           const savedId = await saveWork();
           console.log("[おもろ図鑑] 保存成功 id:", savedId);
 
-          status.textContent = `保存成功！ ID: ${savedId}`;
+          const workURL = `${location.origin}${location.pathname}?work=${savedId}`;
+          status.innerHTML = `保存成功！ <a href="${workURL}" style="color:inherit;word-break:break-all;">${workURL}</a>`;
           status.className = "save-status save-status--success";
           status.hidden = false;
+          updateShareBar(workURL);
         } catch (err) {
           console.error("[おもろ図鑑] 保存失敗:", err);
           status.textContent = `保存に失敗しました: ${err.message}`;
@@ -694,7 +637,6 @@
 
       function initSwiper() {
         swiperInstance = new Swiper("#cardGrid", {
-          // モバイルデフォルト: 中央カード＋左右ピーク
           slidesPerView: "auto",
           centeredSlides: true,
           spaceBetween: 16,
@@ -703,15 +645,6 @@
           navigation: {
             nextEl: ".swiper-button-next",
             prevEl: ".swiper-button-prev",
-          },
-          // PC: 見開き2ページ表示
-          breakpoints: {
-            768: {
-              slidesPerView: 2,
-              slidesPerGroup: 2,
-              centeredSlides: false,
-              spaceBetween: 0,
-            },
           },
         });
       }
