@@ -1130,10 +1130,13 @@
        * - TOPICS のimageフィールドも更新し、以降のupdateCardMediaと整合させる
        */
       function restoreWork(work) {
-        const topicsWithImages = work.topics.map((t) => ({
-          ...t,
-          image: work.images?.[t.id] ?? null,
-        }));
+        const topicsWithImages = work.topics.map((t) => {
+          const storagePath = work.images?.[t.id] ?? null;
+          const image = storagePath && supabaseClient
+            ? supabaseClient.storage.from("work-images").getPublicUrl(storagePath).data.publicUrl
+            : null;
+          return { ...t, image };
+        });
 
         // TOPICS本体のimage・nameを更新（以降の操作と整合させる）
         topicsWithImages.forEach((t) => {
