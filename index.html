@@ -939,6 +939,18 @@
 
         // カード単体のメディアエリアだけ差し替え（全再描画しない）
         updateCardMedia(id);
+
+        // Supabase Storage にアップロード（UIブロックなし・バックグラウンド）
+        if (supabaseClient) {
+          const ext = file.type.split("/")[1] || "png";
+          const path = `works/${Date.now()}/${id}.${ext}`;
+          const { error } = await supabaseClient.storage.from("work-images").upload(path, file);
+          if (error) {
+            console.error("[おもろ図鑑] Storage アップロード失敗:", error.message);
+          } else {
+            console.log("[おもろ図鑑] Storage アップロード成功:", path);
+          }
+        }
       }
 
       /* =====================================================================
