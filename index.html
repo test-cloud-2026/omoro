@@ -463,6 +463,25 @@
         color: rgba(80, 65, 45, 0.55);
       }
 
+      /* 通し番号とカテゴリを横並びにする（通常モードのみ） */
+      body:not(.screenshot-mode) .swiper-slide:not(.swiper-slide-duplicate) .card {
+        flex-direction: row;
+        flex-wrap: wrap;
+        row-gap: 10px;
+        column-gap: 6px;
+        align-items: center;
+      }
+
+      body:not(.screenshot-mode) .swiper-slide:not(.swiper-slide-duplicate) .card__category {
+        order: -1;
+      }
+
+      body:not(.screenshot-mode) .swiper-slide:not(.swiper-slide-duplicate) .card__media,
+      body:not(.screenshot-mode) .swiper-slide:not(.swiper-slide-duplicate) .card__name-input,
+      body:not(.screenshot-mode) .swiper-slide:not(.swiper-slide-duplicate) .card__text {
+        flex: 0 0 100%;
+      }
+
       /* =====================
        Screenshot mode button
     ===================== */
