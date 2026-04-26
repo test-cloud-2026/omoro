@@ -487,7 +487,7 @@
     ===================== */
 
       body.screenshot-mode {
-        background: #3b4c38;
+        background: #4a5e46;
         font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, serif;
       }
 
@@ -502,7 +502,9 @@
         background-color: #f5efe4;
         background-image:
           radial-gradient(ellipse 80% 55% at 20% 25%, rgba(185, 158, 120, 0.12) 0%, transparent 55%),
-          radial-gradient(ellipse 70% 65% at 80% 75%, rgba(152, 130, 98, 0.08) 0%, transparent 60%);
+          radial-gradient(ellipse 70% 65% at 80% 75%, rgba(152, 130, 98, 0.08) 0%, transparent 60%),
+          repeating-radial-gradient(circle at 30% 60%, transparent 0px, transparent 1px, rgba(160, 138, 108, 0.025) 1px, rgba(160, 138, 108, 0.025) 2px),
+          repeating-radial-gradient(circle at 70% 30%, transparent 0px, transparent 1px, rgba(140, 120, 90, 0.02) 1px, rgba(140, 120, 90, 0.02) 2px);
         border-radius: 8px;
         border: 1px solid rgba(160, 140, 110, 0.4);
         box-shadow:
@@ -530,7 +532,7 @@
 
       body.screenshot-mode .card__name-input {
         color: #332a1e;
-        border-bottom-color: rgba(168, 148, 118, 0.4);
+        border-bottom: none;
       }
 
       body.screenshot-mode .card__upload-label {
