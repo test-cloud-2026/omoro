@@ -9,6 +9,7 @@
     <!-- Swiper -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
       /* =====================
        Design tokens
@@ -577,6 +578,39 @@
         border-color: rgba(168, 148, 118, 0.3);
         color: rgba(88, 72, 52, 0.5);
       }
+
+      /* =====================
+       Download button
+    ===================== */
+      .btn-download {
+        display: none;
+      }
+
+      body.screenshot-mode .btn-download {
+        display: block;
+        width: 100%;
+        max-width: 720px;
+        margin-bottom: 16px;
+        padding: 11px 20px;
+        border: none;
+        border-radius: 99px;
+        background: rgba(245, 239, 228, 0.92);
+        color: #332a1e;
+        font-size: 0.88rem;
+        font-weight: 700;
+        font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, serif;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+        text-align: center;
+        transition: background 0.15s, opacity 0.15s;
+      }
+      body.screenshot-mode .btn-download:hover {
+        background: rgba(245, 239, 228, 1);
+      }
+      body.screenshot-mode .btn-download:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     </style>
   </head>
   <body>
@@ -591,6 +625,9 @@
 
     <!-- スクショモード切替ボタン -->
     <button class="btn-screenshot" id="btnScreenshot">スクショモード</button>
+
+    <!-- 画像として保存ボタン（スクショモード時のみ表示） -->
+    <button class="btn-download" id="btnDownload">画像として保存</button>
 
     <!-- カード一覧（Swiperコンテナ） -->
     <div class="swiper" id="cardGrid" aria-live="polite">
@@ -1124,6 +1161,27 @@
         const on = document.body.classList.toggle("screenshot-mode");
         document.getElementById("btnScreenshot").classList.toggle("is-active", on);
         document.getElementById("btnScreenshot").textContent = on ? "通常モードに戻る" : "スクショモード";
+      });
+
+      /* 画像として保存 */
+      document.getElementById("btnDownload").addEventListener("click", async () => {
+        const btn = document.getElementById("btnDownload");
+        btn.disabled = true;
+        btn.textContent = "保存中...";
+        try {
+          const canvas = await html2canvas(document.getElementById("cardGrid"), {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: null,
+          });
+          const link = document.createElement("a");
+          link.download = "omoro-zukan.png";
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "画像として保存";
+        }
       });
 
       /* Escape で解除 */
