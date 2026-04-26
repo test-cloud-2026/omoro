@@ -416,6 +416,71 @@
         padding: 32px 0;
         line-height: 1.8;
       }
+
+      /* =====================
+       Screenshot mode button
+    ===================== */
+      .btn-screenshot {
+        display: block;
+        width: 100%;
+        max-width: 720px;
+        margin-bottom: 16px;
+        padding: 9px 20px;
+        border: 1.5px solid var(--border);
+        border-radius: 99px;
+        background: var(--surface);
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        cursor: pointer;
+        text-align: center;
+        transition: border-color 0.15s, color 0.15s, background 0.15s;
+      }
+      .btn-screenshot:hover {
+        border-color: var(--text-primary);
+        color: var(--text-primary);
+      }
+      .btn-screenshot.is-active {
+        background: var(--btn-bg);
+        color: var(--btn-text);
+        border-color: var(--btn-bg);
+      }
+
+      /* =====================
+       Screenshot mode layout
+    ===================== */
+      body.screenshot-mode #filterBar,
+      body.screenshot-mode #btnScreenshot,
+      body.screenshot-mode #saveSection,
+      body.screenshot-mode #shareBar,
+      body.screenshot-mode .swiper-button-prev,
+      body.screenshot-mode .swiper-button-next {
+        display: none !important;
+      }
+
+      body.screenshot-mode #cardGrid .swiper-wrapper {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--gap);
+        transform: none !important;
+        width: 100% !important;
+      }
+
+      body.screenshot-mode #cardGrid .swiper-slide {
+        width: 100% !important;
+        max-width: none !important;
+      }
+
+      body.screenshot-mode #cardGrid .swiper-slide-duplicate {
+        display: none !important;
+      }
+
+      @media (min-width: 600px) {
+        body.screenshot-mode #cardGrid .swiper-wrapper {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
     </style>
   </head>
   <body>
@@ -427,6 +492,9 @@
 
     <!-- フィルターバー（JS で生成） -->
     <nav class="filter-bar" id="filterBar" aria-label="カテゴリ選択"></nav>
+
+    <!-- スクショモード切替ボタン -->
+    <button class="btn-screenshot" id="btnScreenshot">スクショモード</button>
 
     <!-- カード一覧（Swiperコンテナ） -->
     <div class="swiper" id="cardGrid" aria-live="polite">
@@ -954,6 +1022,20 @@
 
       /* 保存ボタン */
       document.getElementById("btnSave").addEventListener("click", handleSave);
+
+      /* スクショモード切替 */
+      document.getElementById("btnScreenshot").addEventListener("click", () => {
+        const on = document.body.classList.toggle("screenshot-mode");
+        document.getElementById("btnScreenshot").classList.toggle("is-active", on);
+        document.getElementById("btnScreenshot").textContent = on ? "通常モードに戻る" : "スクショモード";
+      });
+
+      /* Escape で解除 */
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && document.body.classList.contains("screenshot-mode")) {
+          document.getElementById("btnScreenshot").click();
+        }
+      });
 
       /* 起動時 */
       initFilterBar();
