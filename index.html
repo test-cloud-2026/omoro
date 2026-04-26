@@ -517,6 +517,23 @@
 
       body.screenshot-mode #cardGrid .swiper-wrapper {
         gap: 16px;
+        counter-reset: card-no;
+      }
+
+      /* No.XX ナンバリング — ::before を最初の flex アイテムとして配置 */
+      body.screenshot-mode .card::before {
+        counter-increment: card-no;
+        content: "No.0" counter(card-no);
+        order: -2;
+        align-self: flex-start;
+        font-size: 0.62rem;
+        letter-spacing: 0.1em;
+        color: rgba(80, 65, 45, 0.5);
+      }
+
+      /* カテゴリラベルを画像の直前（order: -1）に移動 */
+      body.screenshot-mode .card__category {
+        order: -1;
       }
 
       body.screenshot-mode .card {
