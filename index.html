@@ -758,8 +758,8 @@
 
       /**
        * DOM のカード一覧から現在表示中の作品データを収集する
-       * - topics: テキスト情報のみの配列（DB の topics カラムに対応）
-       * - images: { topicId: DataURL | null }（DB の images カラムに対応）
+       * - topics:   テキスト情報のみの配列（DB の topics カラムに対応）
+       * - dataURLs: { topicId: DataURL | null }（Storage アップロード用・DB には保存しない）
        */
       function collectCurrentWork() {
         const cards = [...document.querySelectorAll(".swiper-slide:not(.swiper-slide-duplicate) .card")];
@@ -767,13 +767,14 @@
           const t = TOPICS.find((tp) => tp.id === card.dataset.id);
           return { id: t.id, text: t.text, category: t.category, name: t.name ?? null };
         });
-        const images = Object.fromEntries(topics.map((t) => [t.id, TOPICS.find((tp) => tp.id === t.id)?.image ?? null]));
-        return { topics, images };
+        const dataURLs = Object.fromEntries(topics.map((t) => [t.id, TOPICS.find((tp) => tp.id === t.id)?.image ?? null]));
+        return { topics, dataURLs };
       }
 
       /**
        * works テーブルに insert して生成された id を返す
-       * 将来: images 内の DataURL を Storage にアップロードしてから URL に差し替える
+       * - DataURL を Storage にアップロードしてパスを images カラムに保存する
+       * - アップロード失敗した画像は null で保存する
        * @returns {Promise<string>} 保存された作品の id
        */
       async function saveWork() {
@@ -781,7 +782,27 @@
           throw new Error("Supabase未設定：SUPABASE_URL と SUPABASE_ANON_KEY を入力してください");
         }
 
-        const { topics, images } = collectCurrentWork();
+        const { topics, dataURLs } = collectCurrentWork();
+
+        // DataURL → Storage アップロード → パスを収集（失敗は null）
+        const imageEntries = await Promise.all(
+          topics.map(async (t) => {
+            const dataURL = dataURLs[t.id];
+            if (!dataURL) return [t.id, null];
+            try {
+              const blob = dataURLtoBlob(dataURL);
+              const ext = blob.type.split("/")[1] || "png";
+              const path = `works/${Date.now()}/${t.id}.${ext}`;
+              const { error } = await supabaseClient.storage.from("work-images").upload(path, blob);
+              if (error) throw error;
+              return [t.id, path];
+            } catch {
+              return [t.id, null];
+            }
+          })
+        );
+        const images = Object.fromEntries(imageEntries);
+
         const { data, error } = await supabaseClient.from("works").insert({ title: "おもろ図鑑", topics, images }).select("id").single();
 
         if (error) throw new Error(error.message);
@@ -902,6 +923,20 @@
        画像アップロード層
        - Supabase移行時: DataURL → Storage にアップロードして URL を返す関数に差し替え
     ===================================================================== */
+
+      /**
+       * DataURL を Blob に変換する（Storage アップロード用）
+       * @param {string} dataURL
+       * @returns {Blob}
+       */
+      function dataURLtoBlob(dataURL) {
+        const [header, base64] = dataURL.split(",");
+        const mime = header.match(/:(.*?);/)[1];
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        return new Blob([bytes], { type: mime });
+      }
 
       /**
        * File を読み込み DataURL を返す
