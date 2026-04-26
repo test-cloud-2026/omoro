@@ -481,6 +481,62 @@
           grid-template-columns: repeat(3, 1fr);
         }
       }
+
+      /* =====================
+       Screenshot mode — antique encyclopedia design
+    ===================== */
+
+      body.screenshot-mode {
+        background: #3b4c38;
+        font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, serif;
+      }
+
+      body.screenshot-mode .header__title {
+        color: #dcd4c4;
+      }
+      body.screenshot-mode .header__subtitle {
+        color: #afa89a;
+      }
+
+      body.screenshot-mode #cardGrid {
+        background-color: #f5efe4;
+        background-image:
+          radial-gradient(ellipse 80% 55% at 20% 25%, rgba(185, 158, 120, 0.12) 0%, transparent 55%),
+          radial-gradient(ellipse 70% 65% at 80% 75%, rgba(152, 130, 98, 0.08) 0%, transparent 60%);
+        border-radius: 8px;
+        border: 1px solid rgba(160, 140, 110, 0.4);
+        box-shadow:
+          0 6px 24px rgba(0, 0, 0, 0.35),
+          0 2px 6px rgba(0, 0, 0, 0.18),
+          inset 0 0 60px rgba(152, 132, 102, 0.05);
+        padding: 48px 40px;
+        max-width: 860px;
+      }
+
+      body.screenshot-mode #cardGrid .swiper-wrapper {
+        gap: 16px;
+      }
+
+      body.screenshot-mode .card {
+        background: rgba(255, 253, 247, 0.85);
+        border-color: rgba(168, 148, 118, 0.38);
+        border-radius: 5px;
+      }
+
+      body.screenshot-mode .card__text {
+        color: #332a1e;
+        font-size: 0.83rem;
+      }
+
+      body.screenshot-mode .card__name-input {
+        color: #332a1e;
+        border-bottom-color: rgba(168, 148, 118, 0.4);
+      }
+
+      body.screenshot-mode .card__upload-label {
+        border-color: rgba(168, 148, 118, 0.3);
+        color: rgba(88, 72, 52, 0.5);
+      }
     </style>
   </head>
   <body>
