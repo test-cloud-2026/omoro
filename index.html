@@ -447,6 +447,22 @@
         filter: saturate(0.82) brightness(0.95);
       }
 
+      /* 通し番号 — counter-reset */
+      #cardGrid .swiper-wrapper {
+        counter-reset: card-no;
+      }
+
+      /* 通し番号 — 実スライドのみ対象（ループクローンは除外） */
+      .swiper-slide:not(.swiper-slide-duplicate) .card::before {
+        counter-increment: card-no;
+        content: "No.0" counter(card-no);
+        order: -2;
+        align-self: flex-start;
+        font-size: 0.62rem;
+        letter-spacing: 0.1em;
+        color: rgba(80, 65, 45, 0.55);
+      }
+
       /* =====================
        Screenshot mode button
     ===================== */
@@ -568,20 +584,15 @@
         counter-reset: card-no;
       }
 
-      /* No.XX ナンバリング — 画像左上にオーバーレイ */
-      body.screenshot-mode .card__media::before {
+      /* No.XX ナンバリング — ::before を最初の flex アイテムとして配置 */
+      body.screenshot-mode .card::before {
         counter-increment: card-no;
         content: "No.0" counter(card-no);
-        position: absolute;
-        top: 8px;
-        left: 10px;
-        z-index: 1;
-        font-size: 0.6rem;
+        order: -2;
+        align-self: flex-start;
+        font-size: 0.62rem;
         letter-spacing: 0.1em;
-        color: #fff;
-        background: rgba(0, 0, 0, 0.32);
-        padding: 2px 7px;
-        border-radius: 4px;
+        color: rgba(80, 65, 45, 0.5);
       }
 
       /* カテゴリラベルを画像の直前（order: -1）に移動 */
