@@ -427,9 +427,7 @@
       }
 
       #cardGrid {
-        background-image:
-          radial-gradient(ellipse 80% 60% at 25% 30%, rgba(185, 158, 120, 0.06) 0%, transparent 60%),
-          radial-gradient(ellipse 60% 70% at 75% 70%, rgba(152, 130, 98, 0.04) 0%, transparent 60%);
+        background-image: radial-gradient(ellipse 80% 60% at 25% 30%, rgba(185, 158, 120, 0.06) 0%, transparent 60%), radial-gradient(ellipse 60% 70% at 75% 70%, rgba(152, 130, 98, 0.04) 0%, transparent 60%);
       }
 
       .card {
@@ -538,6 +536,15 @@
       body.screenshot-mode #cardGrid .swiper-slide {
         width: 100% !important;
         max-width: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+      }
+
+      /* coverflow が生成する影オーバーレイを非表示 */
+      body.screenshot-mode .swiper-slide-shadow-left,
+      body.screenshot-mode .swiper-slide-shadow-right,
+      body.screenshot-mode .swiper-slide-shadow {
+        display: none !important;
       }
 
       body.screenshot-mode #cardGrid .swiper-slide-duplicate {
@@ -647,15 +654,12 @@
   <body>
     <!-- ヘッダー -->
     <header class="header">
-      <h1 class="header__title">おもろ図鑑</h1>
-      <p class="header__subtitle">カテゴリを選んでお題を6つ生成します</p>
+      <h1 class="header__title">おもろ図鑑<br /><span>あなたの観察記録</span></h1>
     </header>
 
     <!-- フィルターバー（JS で生成） -->
     <nav class="filter-bar" id="filterBar" aria-label="カテゴリ選択"></nav>
-
-    <!-- スクショモード切替ボタン -->
-    <button class="btn-screenshot" id="btnScreenshot">スクショモード</button>
+    <p class="header__subtitle">カテゴリを選んでお題を6つ生成します</p>
 
     <!-- カード一覧（Swiperコンテナ） -->
     <div class="swiper" id="cardGrid" aria-live="polite">
@@ -673,6 +677,9 @@
       <a id="btnShareX" class="share-btn share-btn--x" href="#" target="_blank" rel="noopener noreferrer"> X でポスト </a>
       <a id="btnShareLine" class="share-btn share-btn--line" href="#" target="_blank" rel="noopener noreferrer"> LINE で送る </a>
     </div>
+
+    <!-- スクショモード切替ボタン -->
+    <button class="btn-screenshot" id="btnScreenshot">スクショモード</button>
 
     <script>
       /* =====================================================================
@@ -866,8 +873,10 @@
 
       function initSwiper() {
         swiperInstance = new Swiper("#cardGrid", {
-          slidesPerView: "auto",
+          // slidesPerView: "auto",
+          slidesPerView: 2,
           centeredSlides: true,
+          effect: "coverflow",
           spaceBetween: 16,
           grabCursor: true,
           loop: true,
