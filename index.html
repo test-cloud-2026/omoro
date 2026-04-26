@@ -874,6 +874,7 @@
     ===================================================================== */
 
       let swiperInstance = null;
+      let currentWorkId = crypto.randomUUID();
 
       function destroySwiper() {
         if (!swiperInstance) return;
@@ -977,13 +978,12 @@
 
         // Supabase Storage にアップロード（UIブロックなし・バックグラウンド）
         if (supabaseClient) {
-          const ext = file.type.split("/")[1] || "png";
-          const path = `works/${Date.now()}/${id}.${ext}`;
-          const { error } = await supabaseClient.storage.from("work-images").upload(path, file);
+          const path = `works/${currentWorkId}/${id}.png`;
+          const { error } = await supabaseClient.storage.from("work-images").upload(path, file, { upsert: true });
           if (error) {
-            console.error("[おもろ図鑑] Storage アップロード失敗:", error.message);
+            console.error("upload error", error);
           } else {
-            console.log("[おもろ図鑑] Storage アップロード成功:", path);
+            console.log("upload success", path);
           }
         }
       }
