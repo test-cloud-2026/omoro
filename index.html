@@ -4,22 +4,662 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>おもろ図鑑</title>
-    <link rel="stylesheet" href="style.css" />
     <!-- Supabase JS クライアント（UMD） -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <!-- Swiper -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <style>
+      /* =====================
+       Design tokens
+    ===================== */
+      :root {
+        --bg: #f7f6f2;
+        --surface: #ffffff;
+        --text-primary: #1c1c1e;
+        --text-secondary: #6e6e73;
+        --border: #e0dfd8;
+        --btn-bg: #1c1c1e;
+        --btn-text: #ffffff;
+        --btn-hover: #3a3a3c;
+        --radius: 12px;
+        --gap: 12px;
+
+        /* カテゴリカラー */
+        --c-horror: #8b1c2e;
+        --c-daily: #2a6041;
+        --c-sf: #1a3d7c;
+        --c-romance: #7c2a6a;
+      }
+
+      /* =====================
+       Reset / Base
+    ===================== */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+        background: var(--bg);
+        color: var(--text-primary);
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 32px 16px 48px;
+      }
+      @media (min-width: 768px) {
+        body {
+          padding: 48px 40px 80px;
+        }
+      }
+
+      /* =====================
+       Header
+    ===================== */
+      .header {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+      .header__title {
+        font-size: clamp(1.6rem, 5vw, 2.4rem);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      .header__subtitle {
+        margin-top: 6px;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        letter-spacing: 0.02em;
+      }
+
+      /* =====================
+       Filter bar
+    ===================== */
+      .filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        width: 100%;
+        max-width: 720px;
+        margin-bottom: 28px;
+      }
+
+      .filter-btn {
+        padding: 10px 20px;
+        border: 1.5px solid var(--border);
+        border-radius: 99px;
+        background: var(--surface);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          color 0.15s,
+          border-color 0.15s,
+          transform 0.1s;
+      }
+      .filter-btn:hover {
+        border-color: var(--text-secondary);
+      }
+      .filter-btn:active {
+        transform: scale(0.96);
+      }
+
+      .filter-btn.is-active {
+        background: var(--btn-bg);
+        color: var(--btn-text);
+        border-color: var(--btn-bg);
+      }
+
+      /* =====================
+       Swiper container / slide
+    ===================== */
+      #cardGrid {
+        width: 100%;
+        max-width: 1000px;
+        margin: 0 auto;
+        overflow: hidden; /* Swiper required */
+      }
+
+      /* モバイル: ビューポート幅に対する比率で横にはみ出す余地を作る */
+      .swiper-slide {
+        width: 78%;
+        max-width: 300px;
+      }
+
+      /* PC: カード幅を固定して中央カード＋左右見切れが安定して見える */
+      @media (min-width: 768px) {
+        .swiper-slide {
+          width: 280px;
+          max-width: none;
+        }
+      }
+
+      /* =====================
+       Card
+    ===================== */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px 14px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        animation: fadeIn 0.3s ease both;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .card:nth-child(1) {
+        animation-delay: 0s;
+      }
+      .card:nth-child(2) {
+        animation-delay: 0.05s;
+      }
+      .card:nth-child(3) {
+        animation-delay: 0.1s;
+      }
+      .card:nth-child(4) {
+        animation-delay: 0.15s;
+      }
+      .card:nth-child(5) {
+        animation-delay: 0.2s;
+      }
+      .card:nth-child(6) {
+        animation-delay: 0.25s;
+      }
+
+      /* =====================
+       Card media area
+    ===================== */
+      .card__media {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4/3;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg);
+      }
+
+      /* アップロード済み画像 */
+      .card__image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      /* 画像なし時のプレースホルダー兼アップロードボタン */
+      .card__upload-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+        height: 100%;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        border: 1.5px dashed var(--border);
+        border-radius: 8px;
+        transition:
+          border-color 0.15s,
+          color 0.15s;
+      }
+      .card__upload-label:hover {
+        border-color: var(--text-primary);
+        color: var(--text-primary);
+      }
+      .card__upload-label__icon {
+        font-size: 1.4rem;
+        line-height: 1;
+      }
+
+      /* 画像あり時の「変更」ボタン（画像の上に重ねる） */
+      .card__replace-label {
+        position: absolute;
+        bottom: 6px;
+        right: 6px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .card__replace-label:hover {
+        background: rgba(0, 0, 0, 0.75);
+      }
+
+      /* =====================
+       Card body
+    ===================== */
+      .card__category {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        padding: 2px 8px;
+        border-radius: 99px;
+        color: #fff;
+        align-self: flex-start;
+      }
+      .card__category--horror {
+        background: var(--c-horror);
+      }
+      .card__category--daily {
+        background: var(--c-daily);
+      }
+      .card__category--sf {
+        background: var(--c-sf);
+      }
+      .card__category--romance {
+        background: var(--c-romance);
+      }
+
+      .card__text {
+        font-size: clamp(0.8rem, 2.5vw, 0.95rem);
+        line-height: 1.65;
+        flex: 1;
+      }
+
+      /* =====================
+       Save section
+    ===================== */
+      .save-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        max-width: 720px;
+        margin-top: 24px;
+      }
+
+      .btn-save {
+        padding: 13px 32px;
+        background: var(--btn-bg);
+        color: var(--btn-text);
+        border: none;
+        border-radius: var(--radius);
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          transform 0.1s,
+          opacity 0.15s;
+      }
+      .btn-save:hover {
+        background: var(--btn-hover);
+      }
+      .btn-save:active {
+        transform: scale(0.97);
+      }
+      .btn-save:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .save-status {
+        font-size: 0.875rem;
+        text-align: center;
+        line-height: 1.6;
+      }
+      .save-status--success {
+        color: #2a6041;
+      }
+      .save-status--error {
+        color: #8b1c2e;
+      }
+
+      /* =====================
+       Share bar
+    ===================== */
+      .share-bar {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+        width: 100%;
+        max-width: 720px;
+        margin-top: 24px;
+      }
+
+      .share-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 11px 22px;
+        border-radius: 99px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        text-decoration: none;
+        transition:
+          opacity 0.15s,
+          transform 0.1s;
+      }
+      .share-btn:hover {
+        opacity: 0.82;
+      }
+      .share-btn:active {
+        transform: scale(0.96);
+      }
+
+      .share-btn--x {
+        background: #000;
+        color: #fff;
+      }
+      .share-btn--line {
+        background: #06c755;
+        color: #fff;
+      }
+
+      /* =====================
+       Card name input
+    ===================== */
+      .card__name-input {
+        width: 100%;
+        padding: 4px 2px;
+        border: none;
+        border-bottom: 1.5px solid var(--border);
+        border-radius: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        font-family: inherit;
+        color: var(--text-primary);
+        background: transparent;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      .card__name-input::placeholder {
+        color: var(--text-secondary);
+        font-weight: 400;
+      }
+      .card__name-input:focus {
+        border-bottom-color: var(--text-primary);
+      }
+
+      /* =====================
+       Empty state
+    ===================== */
+      .empty-state {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        padding: 32px 0;
+        line-height: 1.8;
+      }
+
+      /* =====================
+       Normal mode — antique encyclopedia (light)
+    ===================== */
+
+      body {
+        background: #f7f3ea;
+        font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, serif;
+      }
+
+      #cardGrid {
+        background-image: radial-gradient(ellipse 80% 60% at 25% 30%, rgba(185, 158, 120, 0.06) 0%, transparent 60%), radial-gradient(ellipse 60% 70% at 75% 70%, rgba(152, 130, 98, 0.04) 0%, transparent 60%);
+      }
+
+      .card {
+        background: #faf7f2;
+        border-color: rgba(175, 152, 118, 0.45);
+        box-shadow: 0 1px 5px rgba(100, 78, 50, 0.07);
+      }
+
+      .card__text {
+        color: #332a1e;
+        line-height: 1.8;
+      }
+
+      .card__category {
+        filter: saturate(0.82) brightness(0.95);
+      }
+
+      /* 通し番号 — counter-reset */
+      #cardGrid .swiper-wrapper {
+        counter-reset: card-no;
+      }
+
+      /* 通し番号 — 実スライドのみ対象（ループクローンは除外） */
+      .swiper-slide:not(.swiper-slide-duplicate) .card::before {
+        counter-increment: card-no;
+        content: "No.0" counter(card-no);
+        order: -2;
+        align-self: flex-start;
+        font-size: 0.62rem;
+        letter-spacing: 0.1em;
+        color: rgba(80, 65, 45, 0.55);
+      }
+
+      /* 通し番号とカテゴリを横並びにする（通常モードのみ） */
+      body:not(.screenshot-mode) .swiper-slide:not(.swiper-slide-duplicate) .card {
+        flex-direction: row;
+        flex-wrap: wrap;
+        row-gap: 10px;
+        column-gap: 6px;
+        align-items: center;
+      }
+
+      body:not(.screenshot-mode) .swiper-slide:not(.swiper-slide-duplicate) .card__category {
+        order: -1;
+      }
+
+      body:not(.screenshot-mode) .swiper-slide:not(.swiper-slide-duplicate) .card__media,
+      body:not(.screenshot-mode) .swiper-slide:not(.swiper-slide-duplicate) .card__name-input,
+      body:not(.screenshot-mode) .swiper-slide:not(.swiper-slide-duplicate) .card__text {
+        flex: 0 0 100%;
+      }
+
+      /* =====================
+       Screenshot mode button
+    ===================== */
+      .btn-screenshot {
+        display: block;
+        width: 100%;
+        max-width: 720px;
+        margin-bottom: 16px;
+        padding: 9px 20px;
+        border: 1.5px solid var(--border);
+        border-radius: 99px;
+        background: var(--surface);
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        cursor: pointer;
+        text-align: center;
+        transition:
+          border-color 0.15s,
+          color 0.15s,
+          background 0.15s;
+      }
+      .btn-screenshot:hover {
+        border-color: var(--text-primary);
+        color: var(--text-primary);
+      }
+      .btn-screenshot.is-active {
+        background: var(--btn-bg);
+        color: var(--btn-text);
+        border-color: var(--btn-bg);
+      }
+
+      /* =====================
+       Screenshot mode layout
+    ===================== */
+      body.screenshot-mode #filterBar,
+      body.screenshot-mode #btnScreenshot,
+      body.screenshot-mode #saveSection,
+      body.screenshot-mode #shareBar,
+      body.screenshot-mode .swiper-button-prev,
+      body.screenshot-mode .swiper-button-next {
+        display: none !important;
+      }
+
+      body.screenshot-mode #cardGrid .swiper-wrapper {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--gap);
+        transform: none !important;
+        width: 100% !important;
+      }
+
+      body.screenshot-mode #cardGrid .swiper-slide {
+        width: 100% !important;
+        max-width: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+      }
+
+      /* coverflow が生成する影オーバーレイを非表示 */
+      body.screenshot-mode .swiper-slide-shadow-left,
+      body.screenshot-mode .swiper-slide-shadow-right,
+      body.screenshot-mode .swiper-slide-shadow {
+        display: none !important;
+      }
+
+      body.screenshot-mode #cardGrid .swiper-slide-duplicate {
+        display: none !important;
+      }
+
+      @media (max-width: 599px) {
+        body.screenshot-mode #cardGrid .swiper-wrapper {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (min-width: 600px) {
+        body.screenshot-mode #cardGrid .swiper-wrapper {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      /* =====================
+       Screenshot mode — antique encyclopedia design
+    ===================== */
+
+      body.screenshot-mode {
+        background: #4a5e46;
+        font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", Georgia, serif;
+      }
+
+      body.screenshot-mode .header__title {
+        color: #dcd4c4;
+      }
+      body.screenshot-mode .header__subtitle {
+        color: #afa89a;
+      }
+
+      body.screenshot-mode #cardGrid {
+        background-color: #f5efe4;
+        background-image: radial-gradient(ellipse 80% 55% at 20% 25%, rgba(185, 158, 120, 0.12) 0%, transparent 55%), radial-gradient(ellipse 70% 65% at 80% 75%, rgba(152, 130, 98, 0.08) 0%, transparent 60%), repeating-radial-gradient(circle at 30% 60%, transparent 0px, transparent 1px, rgba(160, 138, 108, 0.025) 1px, rgba(160, 138, 108, 0.025) 2px),
+          repeating-radial-gradient(circle at 70% 30%, transparent 0px, transparent 1px, rgba(140, 120, 90, 0.02) 1px, rgba(140, 120, 90, 0.02) 2px);
+        border-radius: 8px;
+        border: 1px solid rgba(160, 140, 110, 0.4);
+        box-shadow:
+          0 6px 24px rgba(0, 0, 0, 0.35),
+          0 2px 6px rgba(0, 0, 0, 0.18),
+          inset 0 0 60px rgba(152, 132, 102, 0.05);
+        padding: 48px 40px;
+        max-width: 860px;
+        position: relative;
+      }
+
+      body.screenshot-mode #cardGrid::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 8px;
+        pointer-events: none;
+        mix-blend-mode: multiply;
+        background-image: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(145, 118, 88, 0.018) 2px, rgba(145, 118, 88, 0.018) 3px), repeating-linear-gradient(88deg, transparent 0px, transparent 3px, rgba(130, 108, 80, 0.012) 3px, rgba(130, 108, 80, 0.012) 4px),
+          radial-gradient(ellipse 55% 40% at 22% 30%, rgba(168, 142, 108, 0.07) 0%, transparent 70%), radial-gradient(ellipse 45% 55% at 78% 68%, rgba(152, 128, 94, 0.05) 0%, transparent 65%);
+      }
+
+      body.screenshot-mode #cardGrid .swiper-wrapper {
+        gap: 16px;
+        counter-reset: card-no;
+      }
+
+      /* No.XX ナンバリング — ::before を最初の flex アイテムとして配置 */
+      body.screenshot-mode .card::before {
+        counter-increment: card-no;
+        content: "No.0" counter(card-no);
+        order: -2;
+        align-self: flex-start;
+        font-size: 0.62rem;
+        letter-spacing: 0.1em;
+        color: rgba(80, 65, 45, 0.5);
+      }
+
+      /* カテゴリラベルを画像の直前（order: -1）に移動 */
+      body.screenshot-mode .card__category {
+        order: -1;
+      }
+
+      body.screenshot-mode .card {
+        background: rgba(255, 253, 247, 0.85);
+        border-color: rgba(168, 148, 118, 0.38);
+        border-radius: 5px;
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, 0.12),
+          inset 0 0 4px rgba(120, 100, 80, 0.05);
+      }
+
+      body.screenshot-mode .card__text {
+        color: #332a1e;
+        font-size: 0.83rem;
+      }
+
+      body.screenshot-mode .card__name-input {
+        color: #332a1e;
+        border-bottom: none;
+      }
+
+      body.screenshot-mode .card__upload-label {
+        border-color: rgba(168, 148, 118, 0.3);
+        color: rgba(88, 72, 52, 0.5);
+      }
+    </style>
   </head>
   <body>
     <!-- ヘッダー -->
     <header class="header">
-      <h1 class="header__title">OMORO Visual dictionary<br /><span>それは新しい図鑑</span></h1>
+      <h1 class="header__title">おもろ図鑑<br /><span>あなたの観察記録</span></h1>
     </header>
 
     <!-- フィルターバー（JS で生成） -->
     <nav class="filter-bar" id="filterBar" aria-label="カテゴリ選択"></nav>
-    <p class="header__subtitle">６つの説明を読んで、ぴったりの名前と画像を追加しましょう。</p>
+    <p class="header__subtitle">カテゴリを選んでお題を6つ生成します</p>
 
     <!-- カード一覧（Swiperコンテナ） -->
     <div class="swiper" id="cardGrid" aria-live="polite">
@@ -41,6 +681,542 @@
     <!-- スクショモード切替ボタン -->
     <button class="btn-screenshot" id="btnScreenshot">スクショモード</button>
 
-    <script src="main.js"></script>
+    <script>
+      /* =====================================================================
+       データ層
+       - 各お題は { id, text, category, image } の形式
+       - image: null | DataURL文字列
+       - image はTOPICSオブジェクト自体に保持する（stateとデータを統合）
+       - 将来: Supabase移行時は image を Storage URL に置き換える
+    ===================================================================== */
+      const TOPICS = [
+        // ── ホラー ──────────────────────────────────
+        { id: "h01", text: "一瞬で心を奪い、視線が離れなくなる存在", category: "horror", image: null, name: null },
+        { id: "h02", text: "近づくと理由もなく不安になる気配", category: "horror", image: null, name: null },
+        { id: "h03", text: "触れると記憶が少しだけ曖昧になる物体", category: "horror", image: null, name: null },
+        { id: "h04", text: "鏡の中だけに映り込む、名前のないもの", category: "horror", image: null, name: null },
+        { id: "h05", text: "写真を撮るたびに少しずつ増えている影", category: "horror", image: null, name: null },
+        { id: "h06", text: "深夜にだけ届く、送信者不明のメッセージ", category: "horror", image: null, name: null },
+        { id: "h07", text: "声に出した瞬間に忘れてしまう言葉", category: "horror", image: null, name: null },
+
+        // ── 日常 ────────────────────────────────────
+        { id: "d01", text: "誰も座っていないのに、ほんのり温かい椅子", category: "daily", image: null, name: null },
+        { id: "d02", text: "毎朝同じ時刻に止まっている、壊れていない時計", category: "daily", image: null, name: null },
+        { id: "d03", text: "昨日まで確かにあったはずなのに誰も知らない棚", category: "daily", image: null, name: null },
+        { id: "d04", text: "いつの間にか増えている食器", category: "daily", image: null, name: null },
+        { id: "d05", text: "夕暮れ時にだけ聞こえる遠くの呼び声", category: "daily", image: null, name: null },
+        { id: "d06", text: "開けたはずなのに閉まっているドア", category: "daily", image: null, name: null },
+        { id: "d07", text: "なぜか懐かしいのに、思い出せない場所の匂い", category: "daily", image: null, name: null },
+
+        // ── SF ──────────────────────────────────────
+        { id: "s01", text: "観測するたびに形が微妙に変わる物質", category: "sf", image: null, name: null },
+        { id: "s02", text: "重力が逆に働く空間の、目に見えない境界線", category: "sf", image: null, name: null },
+        { id: "s03", text: "記録には残っているのに誰も覚えていない出来事", category: "sf", image: null, name: null },
+        { id: "s04", text: "時間の流れがほんの少しずれている場所", category: "sf", image: null, name: null },
+        { id: "s05", text: "並行世界の自分が残した、読めない手書きのメモ", category: "sf", image: null, name: null },
+        { id: "s06", text: "みんなが知っているのに、辞書に載っていない言葉", category: "sf", image: null, name: null },
+
+        // ── 乙女 ────────────────────────────────────
+        { id: "r01", text: "視線が合うたびに心拍数が上がる、その理由", category: "romance", image: null, name: null },
+        { id: "r02", text: "記憶の中にしか残っていない甘い香り", category: "romance", image: null, name: null },
+        { id: "r03", text: "名前を呼ばれると体温が少し上がる感覚", category: "romance", image: null, name: null },
+        { id: "r04", text: "夢の中でだけ会える人の、見えない横顔", category: "romance", image: null, name: null },
+        { id: "r05", text: "無意識に探してしまう、誰かの手の温もり", category: "romance", image: null, name: null },
+        { id: "r06", text: "言葉にならないまま消えてしまった気持ち", category: "romance", image: null, name: null },
+        { id: "r07", text: "偶然が重なりすぎる出会いと、その意味", category: "romance", image: null, name: null },
+      ];
+
+      /* =====================================================================
+       カテゴリ定義
+       - ボタン生成・フィルタリング・ラベル表示の単一ソース
+       - key: null = 全カテゴリ（ランダム）
+    ===================================================================== */
+      const CATEGORIES = [
+        { key: null, label: "ランダム" },
+        { key: "horror", label: "ホラー" },
+        { key: "daily", label: "日常" },
+        { key: "sf", label: "SF" },
+        { key: "romance", label: "乙女" },
+      ];
+
+      /* =====================================================================
+       Supabase設定
+       ─ 自分のプロジェクトURLとAnon Keyに書き換えてください ─
+    ===================================================================== */
+      const SUPABASE_URL = "https://pwrvjnmewcuithobsqke.supabase.co"; // 例: https://xxxxxxxxxxxx.supabase.co
+      const SUPABASE_ANON_KEY = "sb_publishable_lTdnyAoLiDmSVnHpblWQag_MytaZZyw"; // 例: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+      const { createClient } = window.supabase;
+      const supabaseClient = SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+      /* =====================================================================
+       保存層
+       - collectCurrentWork(): 現在表示中の6件を DB スキーマ形式に整形
+       - saveWork(): Supabase の works テーブルに insert して id を返す
+       - handleSave(): UI の状態管理（loading / success / error）
+    ===================================================================== */
+
+      /**
+       * DOM のカード一覧から現在表示中の作品データを収集する
+       * - topics: テキスト情報のみの配列（DB の topics カラムに対応）
+       * - images: { topicId: DataURL | null }（DB の images カラムに対応）
+       */
+      function collectCurrentWork() {
+        const cards = [...document.querySelectorAll(".swiper-slide:not(.swiper-slide-duplicate) .card")];
+        const topics = cards.map((card) => {
+          const t = TOPICS.find((tp) => tp.id === card.dataset.id);
+          return { id: t.id, text: t.text, category: t.category, name: t.name ?? null };
+        });
+        const images = Object.fromEntries(topics.map((t) => [t.id, TOPICS.find((tp) => tp.id === t.id)?.image ?? null]));
+        return { topics, images };
+      }
+
+      /**
+       * works テーブルに insert して生成された id を返す
+       * 将来: images 内の DataURL を Storage にアップロードしてから URL に差し替える
+       * @returns {Promise<string>} 保存された作品の id
+       */
+      async function saveWork() {
+        if (!supabaseClient) {
+          throw new Error("Supabase未設定：SUPABASE_URL と SUPABASE_ANON_KEY を入力してください");
+        }
+
+        const { topics, images } = collectCurrentWork();
+        const { data, error } = await supabaseClient.from("works").insert({ title: "おもろ図鑑", topics, images }).select("id").single();
+
+        if (error) throw new Error(error.message);
+        return data.id;
+      }
+
+      /**
+       * works テーブルから id で1件取得する
+       * @param {string} workId
+       * @returns {Promise<{id, title, topics, images}>}
+       */
+      async function fetchWork(workId) {
+        if (!supabaseClient) {
+          throw new Error("Supabase未設定：SUPABASE_URL と SUPABASE_ANON_KEY を入力してください");
+        }
+        const { data, error } = await supabaseClient.from("works").select("id, title, topics, images").eq("id", workId).single();
+
+        if (error) throw new Error(error.message);
+        return data;
+      }
+
+      /**
+       * 保存ボタンのUIハンドラ
+       * - 保存成功後、共有URLを「?work=<id>」形式に更新する
+       */
+      async function handleSave() {
+        const btn = document.getElementById("btnSave");
+        const status = document.getElementById("saveStatus");
+
+        btn.disabled = true;
+        btn.textContent = "保存中...";
+        status.hidden = true;
+        status.className = "save-status";
+
+        try {
+          const savedId = await saveWork();
+          console.log("[おもろ図鑑] 保存成功 id:", savedId);
+
+          const workURL = `${location.origin}${location.pathname}?work=${savedId}`;
+          status.innerHTML = `保存成功！ <a href="${workURL}" style="color:inherit;word-break:break-all;">${workURL}</a>`;
+          status.className = "save-status save-status--success";
+          status.hidden = false;
+          updateShareBar(workURL);
+        } catch (err) {
+          console.error("[おもろ図鑑] 保存失敗:", err);
+          status.textContent = `保存に失敗しました: ${err.message}`;
+          status.className = "save-status save-status--error";
+          status.hidden = false;
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "この作品を保存する";
+        }
+      }
+
+      /* =====================================================================
+       ロジック層
+    ===================================================================== */
+
+      /** 配列からn件をランダムに重複なし抽出 */
+      function pickRandom(arr, n) {
+        const shuffled = [...arr].sort(() => Math.random() - 0.5);
+        return shuffled.slice(0, n);
+      }
+
+      /* =====================================================================
+       Swiper層
+       - innerHTML 更新前に destroySwiper() で古いインスタンスをクリーンアップ
+       - innerHTML 更新後に initSwiper() で新しいインスタンスを作成
+    ===================================================================== */
+
+      let swiperInstance = null;
+
+      function destroySwiper() {
+        if (!swiperInstance) return;
+        try {
+          swiperInstance.destroy(true, true);
+        } catch (_) {}
+        swiperInstance = null;
+      }
+
+      /** swiper-wrapper + ナビゲーションボタンを包んだHTMLを生成する */
+      function buildSwiperHTML(slidesHTML) {
+        return `
+          <div class="swiper-wrapper">${slidesHTML}</div>
+          <div class="swiper-button-prev"></div>
+          <div class="swiper-button-next"></div>
+        `;
+      }
+
+      function initSwiper() {
+        swiperInstance = new Swiper("#cardGrid", {
+          // slidesPerView: "auto",
+          slidesPerView: 2,
+          centeredSlides: true,
+          effect: "coverflow",
+          spaceBetween: 16,
+          grabCursor: true,
+          loop: true,
+          navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
+          },
+        });
+      }
+
+      /* =====================================================================
+       データアクセス層
+       - Supabase移行時はこの関数だけ書き換える
+       - 現在はローカルの TOPICS 配列から取得（オブジェクト参照を返す）
+       - 将来: const { data } = await supabase.from('topics').select('*').eq('category', category)
+    ===================================================================== */
+      async function fetchTopics(category) {
+        const pool = category ? TOPICS.filter((t) => t.category === category) : TOPICS;
+        return pickRandom(pool, 6);
+      }
+
+      /* =====================================================================
+       画像アップロード層
+       - Supabase移行時: DataURL → Storage にアップロードして URL を返す関数に差し替え
+    ===================================================================== */
+
+      /**
+       * File を読み込み DataURL を返す
+       * @param {File} file
+       * @returns {Promise<string>}
+       */
+      function readFileAsDataURL(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.onerror = () => reject(new Error("FileReader failed"));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      /**
+       * 画像をTOPICSに保存してカードのメディアエリアだけ更新する
+       * @param {string} id  - topic.id
+       * @param {File}   file
+       */
+      async function handleImageUpload(id, file) {
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+          alert("画像は5MB以下にしてください");
+          return;
+        }
+
+        const dataURL = await readFileAsDataURL(file);
+
+        // TOPICSオブジェクトに直接書き込む（stateとデータを統合）
+        const topic = TOPICS.find((t) => t.id === id);
+        if (!topic) return;
+        topic.image = dataURL;
+
+        // カード単体のメディアエリアだけ差し替え（全再描画しない）
+        updateCardMedia(id);
+      }
+
+      /* =====================================================================
+       UI層
+    ===================================================================== */
+
+      /** カテゴリキーからラベルを引く */
+      function getCategoryLabel(key) {
+        return CATEGORIES.find((c) => c.key === key)?.label ?? key;
+      }
+
+      /**
+       * カードのメディアエリアHTMLを生成
+       * - image なし → プレースホルダー兼アップロードラベル
+       * - image あり → <img> + 「変更」ラベル
+       */
+      function createMediaHTML(topic) {
+        const inputHTML = `<input type="file" accept="image/*" class="card__file-input" hidden>`;
+
+        if (topic.image) {
+          return `
+          <div class="card__media">
+            <img class="card__image" src="${topic.image}" alt="${topic.text}">
+            <label class="card__replace-label">
+              変更${inputHTML}
+            </label>
+          </div>
+        `;
+        }
+
+        return `
+        <div class="card__media">
+          <label class="card__upload-label">
+            <span class="card__upload-label__icon">＋</span>
+            <span>画像を追加</span>
+            ${inputHTML}
+          </label>
+        </div>
+      `;
+      }
+
+      /**
+       * カード1枚のHTMLを生成
+       * - data-id でTOPICSと紐付け、画像保存・再描画に使う
+       */
+      function createCardHTML(topic) {
+        return `
+        <div class="swiper-slide">
+          <article class="card" data-id="${topic.id}" data-category="${topic.category}">
+            ${createMediaHTML(topic)}
+            <input
+              type="text"
+              class="card__name-input"
+              placeholder="名前をつける"
+              value="${topic.name ?? ""}"
+            >
+            <span class="card__category card__category--${topic.category}">
+              ${getCategoryLabel(topic.category)}
+            </span>
+            <p class="card__text">${topic.text}</p>
+          </article>
+        </div>
+      `;
+      }
+
+      /**
+       * 指定IDのカードのメディアエリアだけを再描画する
+       * 他カードの状態（アップロード済み画像など）は一切触らない
+       */
+      function updateCardMedia(id) {
+        const topic = TOPICS.find((t) => t.id === id);
+        if (!topic) return;
+        document.querySelectorAll(`.card[data-id="${id}"]`).forEach((card) => {
+          const tmp = document.createElement("div");
+          tmp.innerHTML = createMediaHTML(topic);
+          card.querySelector(".card__media").replaceWith(tmp.firstElementChild);
+        });
+      }
+
+      /* =====================================================================
+       SNS共有層
+       - buildXShareURL / buildLINEShareURL は pageURL を引数で受け取る設計
+       - Supabase移行後は renderCards 内の location.href を保存済みURLに差し替えるだけ
+    ===================================================================== */
+
+      /**
+       * 現在DOMに表示中のお題テキストを収集してX投稿用文字列を生成する
+       * （DOMから取得することで表示と共有テキストを常に一致させる）
+       */
+      function buildShareText() {
+        const lines = [...document.querySelectorAll(".swiper-slide:not(.swiper-slide-duplicate) .card__text")].map((el) => `・${el.textContent.trim()}`);
+        return `【おもろ図鑑】\n${lines.join("\n")}\n#おもろ図鑑`;
+      }
+
+      /** X（Twitter）共有URLを生成 */
+      function buildXShareURL(pageURL) {
+        const text = buildShareText();
+        return "https://twitter.com/intent/tweet" + `?text=${encodeURIComponent(text)}` + `&url=${encodeURIComponent(pageURL)}`;
+      }
+
+      /** LINE共有URLを生成 */
+      function buildLINEShareURL(pageURL) {
+        return "https://social-plugins.line.me/lineit/share" + `?url=${encodeURIComponent(pageURL)}`;
+      }
+
+      /**
+       * 保存セクションの表示切替
+       * 新しいカード生成のたびにステータス表示をリセットする
+       */
+      function updateSaveSection() {
+        const section = document.getElementById("saveSection");
+        const hasCards = document.querySelectorAll(".card").length > 0;
+        section.hidden = !hasCards;
+
+        // 新規生成時は前回の保存結果をリセット
+        const status = document.getElementById("saveStatus");
+        status.hidden = true;
+        status.textContent = "";
+        status.className = "save-status";
+        const btn = document.getElementById("btnSave");
+        btn.disabled = false;
+        btn.textContent = "この作品を保存する";
+      }
+
+      /**
+       * 共有バーの表示切替とhrefを更新する
+       * @param {string} [pageURL] 省略時は location.href。保存後は workURL を渡す
+       */
+      function updateShareBar(pageURL = location.href) {
+        const shareBar = document.getElementById("shareBar");
+        const hasCards = document.querySelectorAll(".card").length > 0;
+        shareBar.hidden = !hasCards;
+        if (!hasCards) return;
+
+        document.getElementById("btnShareX").href = buildXShareURL(pageURL);
+        document.getElementById("btnShareLine").href = buildLINEShareURL(pageURL);
+      }
+
+      /**
+       * Supabase から取得した作品データを画面に復元する
+       * - topics ({id, text, category}[]) と images ({topicId: DataURL|null}) をマージして描画
+       * - TOPICS のimageフィールドも更新し、以降のupdateCardMediaと整合させる
+       */
+      function restoreWork(work) {
+        const topicsWithImages = work.topics.map((t) => ({
+          ...t,
+          image: work.images?.[t.id] ?? null,
+        }));
+
+        // TOPICS本体のimage・nameを更新（以降の操作と整合させる）
+        topicsWithImages.forEach((t) => {
+          const master = TOPICS.find((tp) => tp.id === t.id);
+          if (master) {
+            master.image = t.image;
+            master.name = t.name ?? null;
+          }
+        });
+
+        const grid = document.getElementById("cardGrid");
+        destroySwiper();
+        grid.innerHTML = buildSwiperHTML(topicsWithImages.map(createCardHTML).join(""));
+        initSwiper();
+        updateSaveSection();
+        updateShareBar(location.href);
+      }
+
+      /**
+       * URLの ?work= パラメータを見て作品を自動復元する
+       * - パラメータがある → Supabase から取得して restoreWork()
+       * - パラメータがない → 何もしない（通常の生成UIを表示）
+       * @returns {Promise<boolean>} 復元したかどうか
+       */
+      async function loadFromURL() {
+        const workId = new URLSearchParams(location.search).get("work");
+        if (!workId) return false;
+
+        const grid = document.getElementById("cardGrid");
+        destroySwiper();
+        grid.innerHTML = '<p class="empty-state">読み込み中...</p>';
+
+        try {
+          const work = await fetchWork(workId);
+          restoreWork(work);
+          console.log("[おもろ図鑑] 作品を復元しました id:", work.id);
+          return true;
+        } catch (err) {
+          console.error("[おもろ図鑑] 復元失敗:", err);
+          grid.innerHTML = '<p class="empty-state">作品が見つかりません</p>';
+          return false;
+        }
+      }
+
+      /** カードグリッドを指定カテゴリのお題6件で更新 */
+      async function renderCards(category) {
+        const grid = document.getElementById("cardGrid");
+        const picks = await fetchTopics(category);
+        destroySwiper();
+        grid.innerHTML = buildSwiperHTML(picks.map(createCardHTML).join(""));
+        initSwiper();
+        updateSaveSection();
+        updateShareBar();
+      }
+
+      /** フィルターバーをCATEGORIES配列から生成 */
+      function initFilterBar() {
+        const bar = document.getElementById("filterBar");
+        bar.innerHTML = CATEGORIES.map(
+          (cat, i) => `
+        <button
+          class="filter-btn${i === 0 ? " is-active" : ""}"
+          data-category="${cat.key ?? ""}"
+        >${cat.label}</button>
+      `,
+        ).join("");
+      }
+
+      /* =====================================================================
+       イベント登録
+    ===================================================================== */
+
+      /* カテゴリフィルター（filterBar へ委譲） */
+      document.getElementById("filterBar").addEventListener("click", (e) => {
+        const btn = e.target.closest(".filter-btn");
+        if (!btn) return;
+
+        document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+
+        const category = btn.dataset.category || null;
+        renderCards(category);
+      });
+
+      /* 画像ファイル選択（cardGrid へ委譲） */
+      document.getElementById("cardGrid").addEventListener("change", (e) => {
+        if (!e.target.matches(".card__file-input")) return;
+
+        const card = e.target.closest(".card");
+        const id = card?.dataset.id;
+        if (!id) return;
+
+        handleImageUpload(id, e.target.files[0]);
+      });
+
+      /* 名前入力（cardGrid へ委譲） */
+      document.getElementById("cardGrid").addEventListener("input", (e) => {
+        if (!e.target.matches(".card__name-input")) return;
+        const id = e.target.closest(".card")?.dataset.id;
+        if (!id) return;
+        const topic = TOPICS.find((t) => t.id === id);
+        if (topic) topic.name = e.target.value || null;
+        // Swiper loop クローンにも値を同期する
+        document.querySelectorAll(`.card[data-id="${id}"] .card__name-input`).forEach((input) => {
+          if (input !== e.target) input.value = e.target.value;
+        });
+      });
+
+      /* 保存ボタン */
+      document.getElementById("btnSave").addEventListener("click", handleSave);
+
+      /* スクショモード切替 */
+      document.getElementById("btnScreenshot").addEventListener("click", () => {
+        const on = document.body.classList.toggle("screenshot-mode");
+        document.getElementById("btnScreenshot").classList.toggle("is-active", on);
+        document.getElementById("btnScreenshot").textContent = on ? "通常モードに戻る" : "スクショモード";
+      });
+
+      /* Escape で解除 */
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && document.body.classList.contains("screenshot-mode")) {
+          document.getElementById("btnScreenshot").click();
+        }
+      });
+
+      /* 起動時 */
+      initFilterBar();
+      loadFromURL().then((restored) => {
+        if (!restored) renderCards(null);
+      });
+    </script>
   </body>
 </html>
