@@ -78,23 +78,9 @@ const imageStoragePaths = {};
     ===================================================================== */
 
 /**
- * DOM のカード一覧から現在表示中の作品データを収集する
- * - topics: テキスト情報のみの配列（DB の topics カラムに対応）
- * - images: { topicId: DataURL | null }（DB の images カラムに対応）
- */
-function collectCurrentWork() {
-  const cards = [...document.querySelectorAll(".swiper-slide:not(.swiper-slide-duplicate) .card")];
-  const topics = cards.map((card) => {
-    const t = TOPICS.find((tp) => tp.id === card.dataset.id);
-    return { id: t.id, text: t.text, category: t.category, name: t.name ?? null };
-  });
-  const images = Object.fromEntries(topics.map((t) => [t.id, imageStoragePaths[t.id] ?? null]));
-  return { topics, images };
-}
-
-/**
  * works テーブルに insert して生成された id を返す
- * 将来: images 内の DataURL を Storage にアップロードしてから URL に差し替える
+ * - DataURL の画像は Storage へアップロードしてからパスを DB に保存する
+ * - 個別アップロード失敗時は null にして全体保存を続行する
  * @returns {Promise<string>} 保存された作品の id
  */
 async function saveWork() {
@@ -102,8 +88,42 @@ async function saveWork() {
     throw new Error("Supabase未設定：SUPABASE_URL と SUPABASE_ANON_KEY を入力してください");
   }
 
-  const { topics, images } = collectCurrentWork();
-  const { data, error } = await supabaseClient.from("works").insert({ id: currentWorkId, title: "おもろ図鑑", topics, images }).select("id").single();
+  // 表示中の topics を収集
+  const cards = [...document.querySelectorAll(".swiper-slide:not(.swiper-slide-duplicate) .card")];
+  const topics = cards.map((card) => {
+    const t = TOPICS.find((tp) => tp.id === card.dataset.id);
+    return { id: t.id, text: t.text, category: t.category, name: t.name ?? null };
+  });
+
+  // imageStoragePaths に未登録の DataURL を個別アップロード
+  await Promise.all(
+    topics.map(async ({ id }) => {
+      if (imageStoragePaths[id]) return; // アップロード済みはスキップ
+      const topic = TOPICS.find((t) => t.id === id);
+      if (!topic?.image?.startsWith("data:")) return; // DataURL でなければスキップ
+      try {
+        const res = await fetch(topic.image);
+        const blob = await res.blob();
+        const ext = blob.type === "image/jpeg" ? "jpg" : blob.type === "image/webp" ? "webp" : "png";
+        const storagePath = `works/${currentWorkId}/${id}.${ext}`;
+        const { error } = await supabaseClient.storage
+          .from("work-images")
+          .upload(storagePath, blob, { upsert: true, contentType: blob.type });
+        if (!error) imageStoragePaths[id] = storagePath;
+      } catch (_) {
+        // アップロード失敗 → imageStoragePaths[id] 未設定のまま → null として保存
+      }
+    })
+  );
+
+  // DB には Storage パスのみ保存（DataURL・signed URL は含めない）
+  const images = Object.fromEntries(topics.map(({ id }) => [id, imageStoragePaths[id] ?? null]));
+
+  const { data, error } = await supabaseClient
+    .from("works")
+    .insert({ id: currentWorkId, title: "おもろ図鑑", topics, images })
+    .select("id")
+    .single();
 
   if (error) throw new Error(error.message);
   return data.id;
