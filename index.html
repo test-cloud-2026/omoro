@@ -445,15 +445,9 @@
         filter: saturate(0.82) brightness(0.95);
       }
 
-      /* 通し番号 — counter-reset */
-      #cardGrid .swiper-wrapper {
-        counter-reset: card-no;
-      }
-
-      /* 通し番号 — 実スライドのみ対象（ループクローンは除外） */
-      .swiper-slide:not(.swiper-slide-duplicate) .card::before {
-        counter-increment: card-no;
-        content: "No.0" counter(card-no);
+      /* 通し番号 — 通常モード: data-num 属性から読む */
+      body:not(.screenshot-mode) .swiper-slide:not(.swiper-slide-duplicate) .card::before {
+        content: "No." attr(data-num);
         order: -2;
         align-self: flex-start;
         font-size: 0.62rem;
@@ -691,39 +685,60 @@
     ===================================================================== */
       const TOPICS = [
         // ── ホラー ──────────────────────────────────
-        { id: "h01", text: "一瞬で心を奪い、視線が離れなくなる存在", category: "horror", image: null, name: null },
-        { id: "h02", text: "近づくと理由もなく不安になる気配", category: "horror", image: null, name: null },
-        { id: "h03", text: "触れると記憶が少しだけ曖昧になる物体", category: "horror", image: null, name: null },
-        { id: "h04", text: "鏡の中だけに映り込む、名前のないもの", category: "horror", image: null, name: null },
-        { id: "h05", text: "写真を撮るたびに少しずつ増えている影", category: "horror", image: null, name: null },
-        { id: "h06", text: "深夜にだけ届く、送信者不明のメッセージ", category: "horror", image: null, name: null },
-        { id: "h07", text: "声に出した瞬間に忘れてしまう言葉", category: "horror", image: null, name: null },
+        { id: "h01", text: "強い視線を感じさせる存在で、発見された個体はいずれも静止しているように見える。しかし観察者が目を離した瞬間、わずかに位置が変化していることが報告されている。", category: "horror", image: null, name: null },
+        { id: "h02", text: "周囲の空気を不自然に歪ませる気配を持つ存在。接近すると理由のない恐怖感を誘発し、一定距離以内では長時間の観察が困難になる。", category: "horror", image: null, name: null },
+        { id: "h03", text: "接触した対象の記憶を曖昧にする性質を持つ物体。触れた直後から、対象の詳細や存在自体を思い出せなくなる例が多い。", category: "horror", image: null, name: null },
+        { id: "h04", text: "鏡面や反射面にのみ現れるとされる存在。実空間には確認できないが、複数の観察者によって同一の特徴が報告されている。", category: "horror", image: null, name: null },
+        { id: "h05", text: "撮影されるたびに写り込む影の数が増加する現象を伴う存在。増加した影は肉眼では確認できない場合が多い。", category: "horror", image: null, name: null },
+        { id: "h06", text: "深夜帯にのみ通信記録に現れる未知の発信源。内容は一見通常の文章だが、送信元の特定はできていない。", category: "horror", image: null, name: null },
+        { id: "h07", text: "音声として発せられた瞬間に意味を失う言語的存在。録音にも残らず、記録は極めて困難とされている。", category: "horror", image: null, name: null },
+        { id: "h08", text: "視界の端にのみ現れる移動体。正面からの観察は不可能であり、常に視認外で活動していると考えられる。", category: "horror", image: null, name: null },
+        { id: "h09", text: "音だけが先行して観測される存在。音源の位置は一定せず、発生源の特定は現在もできていない。", category: "horror", image: null, name: null },
+        { id: "h10", text: "接触していないにも関わらず触覚のみが発生する現象を伴う存在。特に背後での発生例が多い。", category: "horror", image: null, name: null },
+        { id: "h11", text: "一定の間隔で観測者との距離を縮める影状の存在。振り返るたびに位置が変わる特徴を持つ。", category: "horror", image: null, name: null },
+        { id: "h12", text: "無人の空間で呼吸音のみが確認される現象的存在。音の主は確認されておらず、近づくほど明瞭になる。", category: "horror", image: null, name: null },
 
         // ── 日常 ────────────────────────────────────
-        { id: "d01", text: "誰も座っていないのに、ほんのり温かい椅子", category: "daily", image: null, name: null },
-        { id: "d02", text: "毎朝同じ時刻に止まっている、壊れていない時計", category: "daily", image: null, name: null },
-        { id: "d03", text: "昨日まで確かにあったはずなのに誰も知らない棚", category: "daily", image: null, name: null },
-        { id: "d04", text: "いつの間にか増えている食器", category: "daily", image: null, name: null },
-        { id: "d05", text: "夕暮れ時にだけ聞こえる遠くの呼び声", category: "daily", image: null, name: null },
-        { id: "d06", text: "開けたはずなのに閉まっているドア", category: "daily", image: null, name: null },
-        { id: "d07", text: "なぜか懐かしいのに、思い出せない場所の匂い", category: "daily", image: null, name: null },
+        { id: "d01", text: "誰も使用していないにも関わらず温もりを保持する椅子。直前まで誰かが座っていたような状態が維持される。", category: "daily", image: null, name: null },
+        { id: "d02", text: "特定の時刻で停止し続ける時計。機構的な故障は確認されていないが、毎日同時刻で動作が止まる。", category: "daily", image: null, name: null },
+        { id: "d03", text: "存在が記録されていないにも関わらず、過去には確かに存在していたとされる家具。周囲の記憶との齟齬が発生する。", category: "daily", image: null, name: null },
+        { id: "d04", text: "使用状況と一致しない増加を見せる食器類。保管数が徐々に増えていくが、追加された経路は不明。", category: "daily", image: null, name: null },
+        { id: "d05", text: "特定の時間帯にのみ遠方から呼び声が聞こえる現象。発生源は特定されていない。", category: "daily", image: null, name: null },
+        { id: "d06", text: "開閉状態が記録と一致しない扉。閉じたはずのものが開いていたり、その逆の現象も報告されている。", category: "daily", image: null, name: null },
+        { id: "d07", text: "既知の記憶に該当しないにも関わらず懐かしさを感じる匂い。発生源の特定は困難。", category: "daily", image: null, name: null },
+        { id: "d08", text: "紛失しても必ず同じ場所に戻る物体。移動経路は観測されていない。", category: "daily", image: null, name: null },
+        { id: "d09", text: "未使用にも関わらず減少していく消耗品。消費過程は確認されていない。", category: "daily", image: null, name: null },
+        { id: "d10", text: "内部に入ると時間感覚が変化する小規模空間。外部との時間差が発生する場合がある。", category: "daily", image: null, name: null },
+        { id: "d11", text: "過去に訪れた記憶がないにも関わらず既視感を強く感じる風景。再訪時には印象が変化する。", category: "daily", image: null, name: null },
+        { id: "d12", text: "使用者の認識と異なる配置に変化する家具。移動の過程は確認されていない。", category: "daily", image: null, name: null },
 
         // ── SF ──────────────────────────────────────
-        { id: "s01", text: "観測するたびに形が微妙に変わる物質", category: "sf", image: null, name: null },
-        { id: "s02", text: "重力が逆に働く空間の、目に見えない境界線", category: "sf", image: null, name: null },
-        { id: "s03", text: "記録には残っているのに誰も覚えていない出来事", category: "sf", image: null, name: null },
-        { id: "s04", text: "時間の流れがほんの少しずれている場所", category: "sf", image: null, name: null },
-        { id: "s05", text: "並行世界の自分が残した、読めない手書きのメモ", category: "sf", image: null, name: null },
-        { id: "s06", text: "みんなが知っているのに、辞書に載っていない言葉", category: "sf", image: null, name: null },
+        { id: "s01", text: "観測のたびに微細に形状が変化する物質。観測手段によっても結果が異なる特性を持つ。", category: "sf", image: null, name: null },
+        { id: "s02", text: "重力方向が局所的に反転する空間領域。境界は視認できず、突入時に初めて認識される。", category: "sf", image: null, name: null },
+        { id: "s03", text: "記録上は存在するが記憶として保持されない出来事。複数の媒体に痕跡が残る。", category: "sf", image: null, name: null },
+        { id: "s04", text: "周囲と比較して時間の進行がわずかに異なる領域。長時間滞在で差異が顕著になる。", category: "sf", image: null, name: null },
+        { id: "s05", text: "異なる世界線から持ち込まれたとされる手書きの記録。内容の解読は困難。", category: "sf", image: null, name: null },
+        { id: "s06", text: "意味は共有されているが、いかなる辞書にも記録されていない語。発生源は不明。", category: "sf", image: null, name: null },
+        { id: "s07", text: "接触しても温度変化を生じない物体。熱の伝達が確認されない特異な性質を持つ。", category: "sf", image: null, name: null },
+        { id: "s08", text: "未来時点から送信されたと推定されるデータ断片。解析は進んでいない。", category: "sf", image: null, name: null },
+        { id: "s09", text: "周期的に消失と出現を繰り返す構造物。消失中の状態は観測できない。", category: "sf", image: null, name: null },
+        { id: "s10", text: "存在が確認されているにも関わらず直接観測ができない対象。間接的な影響のみが記録される。", category: "sf", image: null, name: null },
+        { id: "s11", text: "一部の観測者にのみ認識できない色彩。測定機器では存在が確認されている。", category: "sf", image: null, name: null },
+        { id: "s12", text: "接触時に局所的な時間逆行を引き起こす地点。影響範囲は限定的。", category: "sf", image: null, name: null },
 
         // ── 乙女 ────────────────────────────────────
-        { id: "r01", text: "視線が合うたびに心拍数が上がる、その理由", category: "romance", image: null, name: null },
-        { id: "r02", text: "記憶の中にしか残っていない甘い香り", category: "romance", image: null, name: null },
-        { id: "r03", text: "名前を呼ばれると体温が少し上がる感覚", category: "romance", image: null, name: null },
-        { id: "r04", text: "夢の中でだけ会える人の、見えない横顔", category: "romance", image: null, name: null },
-        { id: "r05", text: "無意識に探してしまう、誰かの手の温もり", category: "romance", image: null, name: null },
-        { id: "r06", text: "言葉にならないまま消えてしまった気持ち", category: "romance", image: null, name: null },
-        { id: "r07", text: "偶然が重なりすぎる出会いと、その意味", category: "romance", image: null, name: null },
+        { id: "r01", text: "特定の人物との視線接触時に心拍数が上昇する現象的存在。その原因は解明されていない。", category: "romance", image: null, name: null },
+        { id: "r02", text: "記憶にのみ存在し、実体として再現できない香り。再現試行はすべて失敗している。", category: "romance", image: null, name: null },
+        { id: "r03", text: "特定の呼称を受けた際に体温が上昇する現象。対象者との関係性が影響するとされる。", category: "romance", image: null, name: null },
+        { id: "r04", text: "夢の中でのみ接触可能な人物像。現実空間では観測されない。", category: "romance", image: null, name: null },
+        { id: "r05", text: "無意識下で探索行動を引き起こす対象。触覚記憶が強く影響する。", category: "romance", image: null, name: null },
+        { id: "r06", text: "言語化されないまま消失する感情の残留。記録は困難だが確実に存在する。", category: "romance", image: null, name: null },
+        { id: "r07", text: "偶然と認識される頻度を超えて再現される出会い。因果関係は不明。", category: "romance", image: null, name: null },
+        { id: "r08", text: "短時間の接触後も感覚が持続する現象。特に指先で顕著に現れる。", category: "romance", image: null, name: null },
+        { id: "r09", text: "想起するたびに細部が変化する記憶対象。固定された形を持たない。", category: "romance", image: null, name: null },
+        { id: "r10", text: "言葉として出力されなかった感情が残像として残る現象。視覚化はされない。", category: "romance", image: null, name: null },
+        { id: "r11", text: "距離が離れるほど心理的距離が縮まる関係性を持つ存在。逆転した感覚が特徴。", category: "romance", image: null, name: null },
+        { id: "r12", text: "物理的接触がない状態で安心感を与える存在。接近しすぎると逆に不安定になる。", category: "romance", image: null, name: null },
       ];
 
       /* =====================================================================
@@ -799,7 +814,7 @@
             } catch {
               return [t.id, null];
             }
-          })
+          }),
         );
         const images = Object.fromEntries(imageEntries);
 
@@ -1031,10 +1046,11 @@
        * カード1枚のHTMLを生成
        * - data-id でTOPICSと紐付け、画像保存・再描画に使う
        */
-      function createCardHTML(topic) {
+      function createCardHTML(topic, index) {
+        const num = String(index + 1).padStart(2, "0");
         return `
         <div class="swiper-slide">
-          <article class="card" data-id="${topic.id}" data-category="${topic.category}">
+          <article class="card" data-id="${topic.id}" data-category="${topic.category}" data-num="${num}">
             ${createMediaHTML(topic)}
             <input
               type="text"
@@ -1132,9 +1148,7 @@
       function restoreWork(work) {
         const topicsWithImages = work.topics.map((t) => {
           const storagePath = work.images?.[t.id] ?? null;
-          const image = storagePath
-            ? `${SUPABASE_URL}/storage/v1/object/public/work-images/${storagePath}`
-            : null;
+          const image = storagePath ? `${SUPABASE_URL}/storage/v1/object/public/work-images/${storagePath}` : null;
           return { ...t, image };
         });
 
