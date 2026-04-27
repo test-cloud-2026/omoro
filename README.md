@@ -129,6 +129,8 @@
 ## 📁 ディレクトリ構成
 
 <!-- prettier-ignore-start -->
+
+```bash
 omoro/
 ├── index.html
 └── supabase/
@@ -137,6 +139,7 @@ omoro/
         ├── 002_works_rls.sql
         ├── 003_storage.sql
         └── 004_storage_path_policy.sql
+
 <!-- prettier-ignore-end -->
 
 ---
@@ -145,3 +148,4 @@ omoro/
 
 アップロードした画像は、URLを知っている人から閲覧される可能性があります。
 個人が特定できる写真や顔写真の使用には注意してください。
+```
