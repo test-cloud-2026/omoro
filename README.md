@@ -140,6 +140,8 @@ omoro/
         ├── 003_storage.sql
         └── 004_storage_path_policy.sql
 
+```
+
 <!-- prettier-ignore-end -->
 
 ---
@@ -148,4 +150,3 @@ omoro/
 
 アップロードした画像は、URLを知っている人から閲覧される可能性があります。
 個人が特定できる写真や顔写真の使用には注意してください。
-```
