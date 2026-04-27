@@ -701,8 +701,12 @@
   <body>
     <!-- ヘッダー -->
     <header class="header">
-      <h1 class="header__title">おもろ図鑑<br /><span>あなたの観察記録</span></h1>
+      <h1 class="header__title">OMORO Visual dictionary<br /><span>あなただけのオリジナル図鑑</span></h1>
     </header>
+
+    <div class="">
+      <p>ご注意　このアプリにアップした画像は、他の人に見られることがあります。<br />顔や個人がわかるものは入れないように気をつけてください。</p>
+    </div>
 
     <!-- フィルターバー（JS で生成） -->
     <nav class="filter-bar" id="filterBar" aria-label="カテゴリ選択"></nav>
@@ -1271,8 +1275,7 @@
           data-category="${cat.key ?? ""}"
         >${cat.label}</button>
       `,
-          ).join("") +
-          `<button class="btn-reset-all" id="btnResetAll">リセット</button>`;
+          ).join("") + `<button class="btn-reset-all" id="btnResetAll">リセット</button>`;
       }
 
       /* =====================================================================
@@ -1301,7 +1304,10 @@
         const currentIds = cards.map((c) => c.dataset.id);
         currentIds.forEach((id) => {
           const t = TOPICS.find((tp) => tp.id === id);
-          if (t) { t.image = null; t.name = null; }
+          if (t) {
+            t.image = null;
+            t.name = null;
+          }
         });
 
         const picks = currentIds.map((id) => TOPICS.find((t) => t.id === id));
