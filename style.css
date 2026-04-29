@@ -599,6 +599,10 @@ body.screenshot-mode .header__title {
 body.screenshot-mode .header__subtitle {
   color: #afa89a;
 }
+body.screenshot-mode .notice-block,
+body.screenshot-mode .header__subtitle {
+  display: none;
+}
 
 body.screenshot-mode #cardGrid {
   background-color: #f5efe4;
