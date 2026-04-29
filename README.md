@@ -132,7 +132,9 @@
 
 ```bash
 omoro/
-├── index.html
+├── index.html       # HTML構造
+├── style.css        # スタイル
+├── app.js           # アプリロジック
 └── supabase/
     └── migrations/
         ├── 001_works_table.sql
