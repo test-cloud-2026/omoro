@@ -522,10 +522,14 @@ body:not(.screenshot-mode) .swiper-slide:not(.swiper-slide-duplicate) .card__tex
   text-align: center;
   position: relative;
   z-index: 9999;
+  animation: fadeIn 0.5s ease 0.4s both;
   transition:
     border-color 0.15s,
     color 0.15s,
     background 0.15s;
+}
+.btn-screenshot.is-fade-in {
+  animation: fadeIn 0.5s ease 0.2s both;
 }
 .btn-screenshot:hover {
   border-color: var(--text-primary);

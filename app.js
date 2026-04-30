@@ -620,9 +620,13 @@ document.getElementById("btnSave").addEventListener("click", handleSave);
 
 /* スクショモード切替 */
 document.getElementById("btnScreenshot").addEventListener("click", () => {
+  const btn = document.getElementById("btnScreenshot");
   const on = document.body.classList.toggle("screenshot-mode");
-  document.getElementById("btnScreenshot").classList.toggle("is-active", on);
-  document.getElementById("btnScreenshot").innerHTML = on ? "通常モード<br>に戻る" : "スクショ<br>モード";
+  btn.classList.toggle("is-active", on);
+  btn.innerHTML = on ? "通常モード<br>に戻る" : "スクショ<br>モード";
+  btn.classList.remove("is-fade-in");
+  void btn.offsetWidth;
+  btn.classList.add("is-fade-in");
 });
 
 /* スクショモード解除（サブタイトル下ボタン） */
