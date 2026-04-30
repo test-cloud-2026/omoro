@@ -31,7 +31,7 @@
   padding: 0;
 }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  font-family: "Klee One", "Hiragino Sans", sans-serif;
   background: var(--bg);
   color: var(--text-primary);
   min-height: 100dvh;
