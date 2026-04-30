@@ -571,7 +571,8 @@ body.screenshot-mode #btnScreenshot,
 body.screenshot-mode #saveSection,
 body.screenshot-mode #shareBar,
 body.screenshot-mode .swiper-button-prev,
-body.screenshot-mode .swiper-button-next {
+body.screenshot-mode .swiper-button-next,
+body.screenshot-mode .card__category {
   display: none !important;
 }
 
