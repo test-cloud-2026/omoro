@@ -60,7 +60,11 @@ body {
 .header__title {
   font-size: clamp(1.6rem, 5vw, 2.4rem);
   font-weight: 700;
+  font-family: "Playwrite NZ Guides", cursive;
   letter-spacing: 0.04em;
+}
+.header__title span {
+  font-family: "Klee One", "Hiragino Sans", sans-serif;
 }
 .header__subtitle {
   margin-top: 0;
