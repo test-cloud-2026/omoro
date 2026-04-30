@@ -88,32 +88,32 @@ body {
 }
 
 .filter-btn {
-  padding: 13px 20px;
-  border: 1.5px solid var(--border);
-  border-radius: 99px;
-  background: var(--surface);
+  padding: 13px 28px;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: url('img/tag.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.03em;
   cursor: pointer;
   transition:
-    background 0.15s,
+    background-color 0.15s,
     color 0.15s,
-    border-color 0.15s,
     transform 0.1s;
-}
-.filter-btn:hover {
-  border-color: var(--text-secondary);
 }
 .filter-btn:active {
   transform: scale(0.96);
 }
 
 .filter-btn.is-active {
-  background: var(--btn-bg);
-  color: var(--btn-text);
-  border-color: var(--btn-bg);
+  background-color: #565836;
+  background-image: url('img/tag-active.svg');
+  color: #fff;
 }
 
 /* =====================
