@@ -232,16 +232,23 @@ function buildSwiperHTML(slidesHTML) {
 
 function initSwiper() {
   swiperInstance = new Swiper("#cardGrid", {
-    // slidesPerView: "auto",
-    slidesPerView: 2,
+    slidesPerView: 1.4,
     centeredSlides: true,
-    effect: "coverflow",
-    spaceBetween: 16,
-    grabCursor: true,
     loop: true,
+    spaceBetween: 8,
+    effect: "coverflow",
+    grabCursor: true,
+
     navigation: {
       nextEl: ".swiper-button-next",
       prevEl: ".swiper-button-prev",
+    },
+
+    breakpoints: {
+      768: {
+        slidesPerView: 2,
+        spaceBetween: 16,
+      },
     },
   });
 }
