@@ -622,7 +622,7 @@ document.getElementById("btnSave").addEventListener("click", handleSave);
 document.getElementById("btnScreenshot").addEventListener("click", () => {
   const on = document.body.classList.toggle("screenshot-mode");
   document.getElementById("btnScreenshot").classList.toggle("is-active", on);
-  document.getElementById("btnScreenshot").textContent = on ? "通常モードに戻る" : "スクショモード";
+  document.getElementById("btnScreenshot").innerHTML = on ? "通常モード<br>に戻る" : "スクショ<br>モード";
 });
 
 /* スクショモード解除（サブタイトル下ボタン） */
