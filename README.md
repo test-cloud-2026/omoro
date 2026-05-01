@@ -1,4 +1,5 @@
 ![アプリ画面](./screenshot.png)
+![アプリ画面](./img/screencapture.png)
 
 # OMORO Visual Dictionary（おもろ図鑑）
 
